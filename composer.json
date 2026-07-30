@@ -1,0 +1,29 @@
+{
+    "name": "lexwebdev/laravel-siwx",
+    "description": "Sign-In With X for Laravel: EVM and Solana wallet auth, One-Click Auth ready",
+    "keywords": ["laravel", "siwe", "siwx", "ethereum", "solana", "web3", "auth"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "ext-sodium": "*",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "simplito/elliptic-php": "^1.0",
+        "kornrunner/keccak": "^1.1",
+        "stephenhill/base58": "^1.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0"
+    },
+    "suggest": {
+        "ext-gmp": "Fast secp256k1 math for EVM signature recovery (ext-bcmath works as a slower fallback)",
+        "ext-bcmath": "Fallback secp256k1 math for EVM signature recovery when ext-gmp is unavailable"
+    },
+    "autoload": { "psr-4": { "LexWebDev\\Siwx\\": "src/" } },
+    "autoload-dev": { "psr-4": { "LexWebDev\\Siwx\\Tests\\": "tests/" } },
+    "extra": {
+        "laravel": { "providers": ["LexWebDev\\Siwx\\SiwxServiceProvider"] }
+    },
+    "config": { "allow-plugins": { "pestphp/pest-plugin": true } },
+    "minimum-stability": "stable"
+}

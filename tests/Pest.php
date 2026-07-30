@@ -1,0 +1,36 @@
+<?php
+
+uses(LexWebDev\Siwx\Tests\TestCase::class)->in(__DIR__);
+
+const EVM_SIGNER = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+
+const EVM_MESSAGE = "dapp.expert wants you to sign in with your Ethereum account:\n"
+    . "0x70997970C51812dc3A010C7d01b50e0d17dc79C8\n\n"
+    . "Sign in with Ethereum to the application.\n\n"
+    . "URI: https://dapp.expert\nVersion: 1\nChain ID: 1\n"
+    . "Nonce: 8Kc2fQ1pXm9Zr4Lt\nIssued At: 2026-07-30T12:34:56.000Z";
+
+const EVM_RESOURCES_MESSAGE = EVM_MESSAGE . "\nResources:\n"
+    . "- urn:recap:eyJhdHQiOnsiZWlwMTU1Ijp7InJlcXVlc3QvcGVyc29uYWxfc2lnbiI6W3t9XX19fQ";
+
+const EVM_SIG = '0xdad8168bf0902fc1607c9f9620a31e7bbbc7fdc84b94a084a014707309b91e80'
+    . '3db81f9b3e0eeb2b88ffbe72f918a3e24b5e4a26b29f2a7035a0b29f71d6e3231c';
+
+const EVM_RESOURCES_SIG = '0xb16f1105ae8627b362abe63be8a7258b967f63e88bc23b2b94bc8d57fb78c7f8'
+    . '3db16ab67dd45067d99952394f1b797a4b03679c56eadb6dc32c809f5cf3e5a31c';
+
+const EVM_FOREIGN_SIG = '0x209e5cf3d926998a69b3385d9702ead952b77a091993b46f8cd3a7e9b3c3cf1c'
+    . '14d77184ae800e0f3de1c1d043575d5ad352933e763ebaf5f089161ac58e72091c';
+
+const SOLANA_SIGNER = '8D3G5mxsEXV1n92Lbq85BQSQGaVHBsWNxfYrd6ocYEEW';
+
+const SOLANA_MESSAGE = "dapp.expert wants you to sign in with your Solana account:\n"
+    . "8D3G5mxsEXV1n92Lbq85BQSQGaVHBsWNxfYrd6ocYEEW\n\n"
+    . "Sign in with Solana to the application.\n\n"
+    . "URI: https://dapp.expert\nVersion: 1\n"
+    . "Chain ID: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\n"
+    . "Nonce: 8Kc2fQ1pXm9Zr4Lt\nIssued At: 2026-07-30T12:34:56.000Z";
+
+const SOLANA_SIG_BASE64 = 'VrRdlwp460QwmLKhVWhAo/cjQ6I09fxqQ/pVLrGjchLRKicNJFn7XORx9ZEa6VepB7njRny/9iV54sMLIWvdBA==';
+
+const SOLANA_SIG_BASE58 = '2jYVzMm44yEUrSpcNSug2SAjCLZyry8PyGaRe55LV4topJ5B4paNNt7fyxbfu3ZiXc1aosjLTKpjKRyhsLnhBzYB';

@@ -1,0 +1,23 @@
+# Dependencies
+/vendor/
+composer.lock
+
+# Test artifacts
+.phpunit.result.cache
+/.phpunit.cache/
+/build/
+/coverage/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
