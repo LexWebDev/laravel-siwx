@@ -1,0 +1,211 @@
+# Laravel SIWX
+
+[![tests](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml/badge.svg)](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+Server-side Sign-In With X verification for Laravel. Verifies wallet signatures over
+[EIP-4361](https://eips.ethereum.org/EIPS/eip-4361) messages for **EVM** and **Solana**
+accounts, and survives WalletConnect One-Click Auth.
+
+## Why this exists
+
+A naive SIWE verifier works on the desktop happy path and breaks the moment a real wallet
+shows up:
+
+- **The header is not fixed.** AppKit builds the first line as
+  `${domain} wants you to sign in with your ${networkName} account:`, where `networkName`
+  comes from the network config — `Solana`, `Polygon`, anything. A parser that greps for the
+  word `Ethereum` rejects every non-EVM login.
+- **`Chain ID` is not a number.** AppKit passes a CAIP-2 id (`eip155:1`,
+  `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`), while the One-Click Auth path builds the
+  message through WalletConnect's `formatAuthMessage` and emits a plain integer per EIP-4361.
+  Both arrive at the same endpoint. This package accepts both and normalises to CAIP-2.
+- **One-Click Auth appends a `Resources:` section** with a `urn:recap:` capability. It is part
+  of the signed bytes, so it must be preserved for verification and ignored for field parsing.
+- **Address casing is chain-specific.** Lowercasing a Solana base58 address turns it into a
+  different, non-existent account.
+
+Each of those is covered by a test against a real signature vector.
+
+## Supported chains
+
+| CAIP-2 namespace | Chains | Signature scheme |
+|---|---|---|
+| `eip155` | every EVM chain | secp256k1 + keccak256, EIP-191, optional EIP-1271 |
+| `solana` | Solana mainnet/devnet | ed25519 via `ext-sodium`, base58 and base64 signatures |
+
+Bitcoin (`bip122`) is intentionally out of 0.1.0 — BIP-322 requires building and validating
+virtual transactions, and there is no PHP library for it yet. The architecture is ready for it:
+add your own verifier without touching the core.
+
+```php
+use LexWebDev\Siwx\Contracts\SignatureVerifier;
+use LexWebDev\Siwx\VerifierRegistry;
+
+// In a service provider's boot():
+app(VerifierRegistry::class)->register(new MyBip122Verifier);
+```
+
+Also add the namespace to `config('siwx.namespaces')` — the registry refuses namespaces that
+are not explicitly enabled.
+
+## Installation
+
+```bash
+composer require lexwebdev/laravel-siwx
+php artisan vendor:publish --tag=siwx-config
+```
+
+## Configuration
+
+`SIWX_ALLOWED_DOMAINS` is **required**. With an empty allow list every verification fails with
+`siwx_invalid_domain`. That is deliberate: an empty allow list is safer than an open one, and
+the domain binding is what stops a signature obtained on another site from working on yours.
+
+```dotenv
+SIWX_ALLOWED_DOMAINS=app.example,www.app.example
+SIWX_NONCE_TTL=600
+SIWX_CLOCK_SKEW=300
+SIWX_CACHE_STORE=
+SIWX_ROUTES_ENABLED=true
+SIWX_ROUTES_PREFIX=siwx
+SIWX_EIP1271_ENABLED=false
+SIWX_RPC_URL=
+```
+
+Both the `domain` line and the host of the `URI` field must appear in the allow list.
+
+## Usage
+
+The package ships `GET /siwx/nonce`, which returns `{"nonce": "..."}`. Nonces are single use
+and expire after `SIWX_NONCE_TTL` seconds. Disable the route with `SIWX_ROUTES_ENABLED=false`
+if you want to issue nonces yourself.
+
+Authentication routes are deliberately not included — they depend on your user model and token
+strategy. A minimal controller:
+
+```php
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use LexWebDev\Siwx\SiwxVerifier;
+
+public function auth(Request $request, SiwxVerifier $verifier): JsonResponse
+{
+    $data = $request->validate([
+        'message' => ['required', 'string', 'max:4000'],
+        'signature' => ['required', 'string', 'max:2000'],
+    ]);
+
+    $session = $verifier->verify($data['message'], $data['signature']);
+
+    $user = User::firstOrCreate([
+        'wallet_address' => $session->address,
+        'wallet_namespace' => $session->namespace,
+    ]);
+
+    return response()->json(['access_token' => $user->createToken('siwx')->plainTextToken]);
+}
+```
+
+`verify()` throws `LexWebDev\Siwx\Exceptions\SiwxException` on any failure and returns a
+`VerifiedSiwxSession` on success:
+
+```php
+$session->address;    // normalised per chain
+$session->namespace;  // 'eip155' | 'solana'
+$session->chainId;    // always CAIP-2, e.g. 'eip155:137'
+$session->domain;
+$session->issuedAt;   // CarbonImmutable
+$session->message;    // the parsed SiwxMessage
+```
+
+### Storing the address
+
+`$session->address` is normalised **per chain**: EVM addresses are lowercased, Solana base58
+addresses are returned byte-for-byte because base58 is case-sensitive.
+
+Never store the address alone. The same string can be a valid account on more than one
+namespace, so make the unique index cover the pair:
+
+```php
+$table->string('wallet_namespace');
+$table->string('wallet_address');
+$table->unique(['wallet_namespace', 'wallet_address']);
+```
+
+## Error codes
+
+`SiwxException::code()` returns a machine-readable string. Nothing about the internals leaks
+into it — you get the code, not a "recovered 0xabc, expected 0xdef" diagnostic.
+
+| Code | Meaning |
+|---|---|
+| `siwx_invalid_message` | malformed EIP-4361 message, bad version, or a failed timestamp check |
+| `siwx_invalid_domain` | `domain` or `URI` host is not in the allow list, or the list is empty |
+| `siwx_invalid_nonce` | nonce was never issued, already used, or expired |
+| `siwx_invalid_signature` | signature does not belong to the claimed address |
+| `siwx_unsupported_namespace` | chain namespace is unknown or disabled in config |
+
+The nonce is consumed **after** the signature check passes, so an invalid signature cannot be
+used to burn somebody else's nonce.
+
+## Frontend
+
+Use `SIWXConfig` from `@reown/appkit` — there is no separate `@reown/appkit-siwx` package to
+install.
+
+```ts
+import { createAppKit } from '@reown/appkit'
+
+createAppKit({
+  // ...
+  siwx: {
+    async getNonce() {
+      const { nonce } = await fetch('/siwx/nonce').then((r) => r.json())
+      return nonce
+    },
+    async addSession({ message, signature }) {
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, signature }),
+      })
+    },
+    // getSessions, revokeSession, setSessions per your app
+  },
+})
+```
+
+On the One-Click Auth path `createMessage` is called without an address, so the nonce cannot be
+derived from the wallet — fetch it from `GET /siwx/nonce` first.
+
+## Smart contract wallets (EIP-1271)
+
+Off by default. When enabled, a signature that fails `ecrecover` gets a second chance through
+an `eth_call` to `isValidSignature` on the claimed address:
+
+```dotenv
+SIWX_EIP1271_ENABLED=true
+SIWX_RPC_URL=https://your-rpc-endpoint
+```
+
+EOA logins never pay for this — the RPC call only happens after recovery fails. An RPC error
+is treated as an invalid signature, not an exception. This is the only place the package
+touches the network; swap the implementation by rebinding
+`LexWebDev\Siwx\Contracts\ContractSignatureChecker`.
+
+## Compatibility
+
+| | |
+|---|---|
+| PHP | 8.2+ for Laravel 11/12, 8.3+ for Laravel 13 (framework requirement) |
+| Laravel | 11, 12, 13 |
+| Extensions | `ext-sodium` for ed25519, `ext-gmp` for secp256k1 (pulled in by `simplito/elliptic-php`) |
+
+## Security
+
+See [SECURITY.md](SECURITY.md). Please do not report vulnerabilities in public issues.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

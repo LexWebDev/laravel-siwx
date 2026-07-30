@@ -3,6 +3,18 @@
     "description": "Sign-In With X for Laravel: EVM and Solana wallet auth, One-Click Auth ready",
     "keywords": ["laravel", "siwe", "siwx", "ethereum", "solana", "web3", "auth"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "LexWebDev",
+            "homepage": "https://github.com/LexWebDev",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/LexWebDev/laravel-siwx/issues",
+        "source": "https://github.com/LexWebDev/laravel-siwx",
+        "security": "https://github.com/LexWebDev/laravel-siwx/security/policy"
+    },
     "require": {
         "php": "^8.2",
         "ext-sodium": "*",
