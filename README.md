@@ -207,6 +207,13 @@ v11.55.0, is affected by unpatched security advisories, and Composer 2.10+ refus
 them under its default advisory policy — so the framework itself is unavailable there,
 independently of this package.
 
+## Contributing
+
+Bug reports and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers how to run
+the suite and the rules around verification code — worth reading before you touch a verifier,
+since a few of them are not obvious. Participation is under the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Security
 
 See [SECURITY.md](SECURITY.md). Please do not report vulnerabilities in public issues.
