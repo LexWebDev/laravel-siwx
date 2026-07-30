@@ -24,6 +24,14 @@ class SiwxServiceProvider extends ServiceProvider
             $app['config']->get('siwx.cache_store'),
             (int) $app['config']->get('siwx.nonce_ttl'),
         ));
+
+        $this->app->singleton(SiwxVerifier::class, fn ($app) => new SiwxVerifier(
+            new SiwxParser,
+            $app->make(VerifierRegistry::class),
+            $app->make(NonceRepository::class),
+            (array) $app['config']->get('siwx.domains'),
+            (int) $app['config']->get('siwx.clock_skew'),
+        ));
     }
 
     public function boot(): void
