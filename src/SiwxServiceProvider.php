@@ -3,6 +3,7 @@
 namespace LexWebDev\Siwx;
 
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use LexWebDev\Siwx\Contracts\NonceRepository;
 use LexWebDev\Siwx\Verifiers\Eip155Verifier;
@@ -36,6 +37,12 @@ class SiwxServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app['config']->get('siwx.routes.enabled')) {
+            Route::prefix($this->app['config']->get('siwx.routes.prefix'))
+                ->middleware('api')
+                ->group(__DIR__ . '/../routes/siwx.php');
+        }
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/siwx.php' => config_path('siwx.php'),
