@@ -1,6 +1,6 @@
 # Laravel SIWX
 
-[![tests](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml/badge.svg)](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml)
+[![tests](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml/badge.svg?branch=main&event=push)](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml?query=branch%3Amain)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Server-side Sign-In With X verification for Laravel. Verifies wallet signatures over
