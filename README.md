@@ -73,7 +73,13 @@ SIWX_EIP1271_ENABLED=false
 SIWX_RPC_URL=
 ```
 
-Both the `domain` line and the host of the `URI` field must appear in the allow list.
+List each domain **once**, exactly as the wallet will send it in the `domain` line — including a
+port if your app runs on one, e.g. `localhost:3000` during development.
+
+The `URI` field is not matched against the allow list separately. Instead its authority (host, plus
+port when present) must equal the `domain` line, which is what EIP-4361 requires of a well-formed
+message. That is stricter than checking both against the list: with two allowed hosts, a message
+could otherwise name one domain and point its URI at the other.
 
 ## Usage
 

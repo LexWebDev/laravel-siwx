@@ -43,13 +43,33 @@ final class SiwxVerifier
 
     private function assertDomain(SiwxMessage $message): void
     {
-        $uriHost = parse_url($message->uri, PHP_URL_HOST);
-
         if ($this->allowedDomains === []
-            || ! in_array($message->domain, $this->allowedDomains, true)
-            || ! in_array($uriHost, $this->allowedDomains, true)) {
+            || ! in_array($message->domain, $this->allowedDomains, true)) {
             throw new SiwxException('siwx_invalid_domain');
         }
+
+        // Per EIP-4361 the domain line is the authority of the URI, so the two must
+        // agree rather than merely both appear in the allow list. Comparing them
+        // directly closes a hole: with two allowed hosts, a message could name one
+        // domain and point its URI at the other. It also stops forcing callers to
+        // list a host twice — once with the port, once without — because the
+        // authority is rebuilt with the port when the URI carries one.
+        if ($this->authorityOf($message->uri) !== $message->domain) {
+            throw new SiwxException('siwx_invalid_domain');
+        }
+    }
+
+    private function authorityOf(string $uri): ?string
+    {
+        $parts = parse_url($uri);
+
+        if (! is_array($parts) || ! isset($parts['host'])) {
+            return null;
+        }
+
+        return isset($parts['port'])
+            ? $parts['host'] . ':' . $parts['port']
+            : $parts['host'];
     }
 
     private function assertVersion(SiwxMessage $message): void

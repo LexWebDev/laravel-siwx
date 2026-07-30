@@ -81,6 +81,54 @@ it('rejects an expired message', function () {
         ->toThrow(SiwxException::class);
 });
 
+it('accepts a domain that carries a port', function () {
+    // Захват от настоящего кошелька: AppKit кладёт в domain window.location.host,
+    // то есть localhost:3000 с портом, а в URI — origin, откуда parse_url() достаёт
+    // localhost без порта. Одной записи в allow-list должно быть достаточно.
+    $this->travelTo('2026-07-30T14:20:00Z');
+    config()->set('siwx.domains', ['localhost:3000']);
+    Cache::put('siwx:nonce:LZAsP6lEAHmRQuQ4', true, 600);
+
+    $session = app(SiwxVerifier::class)->verify(PHANTOM_MESSAGE, PHANTOM_SIG);
+
+    expect($session->address)->toBe(PHANTOM_SIGNER)
+        ->and($session->domain)->toBe('localhost:3000');
+});
+
+it('rejects a uri whose host differs from the domain', function () {
+    // Оба значения в allow-list, но URI указывает на чужой хост. Подпись при этом
+    // не проверяется — отказ обязан наступить раньше, на разборе домена.
+    config()->set('siwx.domains', ['dapp.expert', 'evil.example']);
+    $raw = str_replace('URI: https://dapp.expert', 'URI: https://evil.example', EVM_MESSAGE);
+
+    $code = null;
+
+    try {
+        app(SiwxVerifier::class)->verify($raw, EVM_SIG);
+    } catch (SiwxException $exception) {
+        $code = $exception->code();
+    }
+
+    expect($code)->toBe('siwx_invalid_domain');
+});
+
+it('rejects a uri whose port differs from the domain', function () {
+    $this->travelTo('2026-07-30T14:20:00Z');
+    config()->set('siwx.domains', ['localhost:3000', 'localhost']);
+    Cache::put('siwx:nonce:LZAsP6lEAHmRQuQ4', true, 600);
+    $raw = str_replace('URI: http://localhost:3000', 'URI: http://localhost:3001', PHANTOM_MESSAGE);
+
+    $code = null;
+
+    try {
+        app(SiwxVerifier::class)->verify($raw, PHANTOM_SIG);
+    } catch (SiwxException $exception) {
+        $code = $exception->code();
+    }
+
+    expect($code)->toBe('siwx_invalid_domain');
+});
+
 it('rejects a disabled namespace', function () {
     config()->set('siwx.namespaces', ['eip155']);
 

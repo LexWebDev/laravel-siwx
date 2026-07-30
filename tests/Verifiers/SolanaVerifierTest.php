@@ -38,6 +38,14 @@ it('rejects an address that is not a 32 byte key', function () {
     expect((new SolanaVerifier)->verify($message, SOLANA_SIG_BASE64))->toBeFalse();
 });
 
+it('verifies a real capture from the Phantom extension', function () {
+    $message = (new SiwxParser)->parse(PHANTOM_MESSAGE);
+
+    expect((new SolanaVerifier)->verify($message, PHANTOM_SIG))->toBeTrue()
+        ->and($message->address)->toBe(PHANTOM_SIGNER)
+        ->and($message->namespace)->toBe('solana');
+});
+
 it('keeps base58 address casing intact', function () {
     expect((new SolanaVerifier)->normaliseAddress(SOLANA_SIGNER))->toBe(SOLANA_SIGNER);
 });

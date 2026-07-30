@@ -33,5 +33,16 @@ in that branch carries unpatched security advisories that Composer 2.10+ refuses
   `RpcContractSignatureChecker`, disabled by default and only consulted after `ecrecover`
   fails.
 
+### Verified against real wallets
+
+Before release the package was driven end to end by MetaMask and Phantom, in the browser and over
+WalletConnect. Those runs confirmed that `Chain ID` arrives in CAIP-2 form, that Phantom returns
+base58 signatures, and that base58 must be decoded before base64 — a base58 signature also decodes
+as base64, into the wrong number of bytes. A real Phantom capture is kept as a test vector.
+
+One path could not be exercised: no available wallet honoured `wc_sessionAuthenticate`, so CACAO
+messages and their `Resources` section are covered by a constructed vector rather than a captured
+one. The parser skips that section by construction.
+
 [Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/LexWebDev/laravel-siwx/releases/tag/v0.1.0
