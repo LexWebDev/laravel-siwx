@@ -198,9 +198,14 @@ touches the network; swap the implementation by rebinding
 
 | | |
 |---|---|
-| PHP | 8.2+ for Laravel 11/12, 8.3+ for Laravel 13 (framework requirement) |
-| Laravel | 11, 12, 13 |
+| PHP | 8.2+ for Laravel 12, 8.3+ for Laravel 13 (framework requirement) |
+| Laravel | 12, 13 |
 | Extensions | `ext-sodium` for ed25519, `ext-gmp` for secp256k1 (pulled in by `simplito/elliptic-php`) |
+
+Laravel 11 is not supported. Every release in that branch, from v11.7.0 through the final
+v11.55.0, is affected by unpatched security advisories, and Composer 2.10+ refuses to install
+them under its default advisory policy — so the framework itself is unavailable there,
+independently of this package.
 
 ## Security
 

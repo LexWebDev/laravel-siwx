@@ -8,7 +8,8 @@ All notable changes to this package are documented here. The format follows
 
 ## [0.1.0] - 2026-07-30
 
-Initial release.
+Initial release. Requires Laravel 12 or 13; Laravel 11 is not supported, because every release
+in that branch carries unpatched security advisories that Composer 2.10+ refuses to install.
 
 ### Added
 
