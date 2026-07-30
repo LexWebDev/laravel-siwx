@@ -5,6 +5,7 @@ namespace LexWebDev\Siwx;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use LexWebDev\Siwx\Contracts\ContractSignatureChecker;
 use LexWebDev\Siwx\Contracts\NonceRepository;
 use LexWebDev\Siwx\Verifiers\Eip155Verifier;
 use LexWebDev\Siwx\Verifiers\SolanaVerifier;
@@ -15,8 +16,19 @@ class SiwxServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/siwx.php', 'siwx');
 
+        $this->app->singleton(ContractSignatureChecker::class, fn ($app) => new RpcContractSignatureChecker(
+            $app['config']->get('siwx.eip1271.rpc_url'),
+        ));
+
         $this->app->singleton(VerifierRegistry::class, fn ($app) => new VerifierRegistry(
-            [new Eip155Verifier, new SolanaVerifier],
+            [
+                new Eip155Verifier(
+                    $app['config']->get('siwx.eip1271.enabled')
+                        ? $app->make(ContractSignatureChecker::class)
+                        : null,
+                ),
+                new SolanaVerifier,
+            ],
             (array) $app['config']->get('siwx.namespaces'),
         ));
 

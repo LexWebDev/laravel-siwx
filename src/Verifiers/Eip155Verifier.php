@@ -4,12 +4,15 @@ namespace LexWebDev\Siwx\Verifiers;
 
 use Elliptic\EC;
 use kornrunner\Keccak;
+use LexWebDev\Siwx\Contracts\ContractSignatureChecker;
 use LexWebDev\Siwx\Contracts\SignatureVerifier;
 use LexWebDev\Siwx\SiwxMessage;
 use Throwable;
 
 final class Eip155Verifier implements SignatureVerifier
 {
+    public function __construct(private readonly ?ContractSignatureChecker $contracts = null) {}
+
     public function namespace(): string
     {
         return 'eip155';
@@ -23,8 +26,16 @@ final class Eip155Verifier implements SignatureVerifier
 
         $recovered = $this->recover($message->raw, $signature);
 
-        return $recovered !== null
-            && $this->normaliseAddress($recovered) === $this->normaliseAddress($message->address);
+        if ($recovered !== null
+            && $this->normaliseAddress($recovered) === $this->normaliseAddress($message->address)) {
+            return true;
+        }
+
+        return (bool) $this->contracts?->isValid(
+            $message->address,
+            '0x' . $this->hash($message->raw),
+            $signature,
+        );
     }
 
     public function normaliseAddress(string $address): string
