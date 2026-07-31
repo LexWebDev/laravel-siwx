@@ -1,7 +1,10 @@
 # Laravel SIWX
 
-[![tests](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml/badge.svg?branch=main&event=push)](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml?query=branch%3Amain)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![packagist](https://img.shields.io/packagist/v/lexwebdev/laravel-siwx?logo=packagist&logoColor=white&label=packagist)](https://packagist.org/packages/lexwebdev/laravel-siwx)
+[![php](https://img.shields.io/packagist/dependency-v/lexwebdev/laravel-siwx/php?logo=php&logoColor=white)](https://packagist.org/packages/lexwebdev/laravel-siwx)
+[![laravel](https://img.shields.io/packagist/dependency-v/lexwebdev/laravel-siwx/illuminate%2Fsupport?logo=laravel&logoColor=white&label=laravel)](https://packagist.org/packages/lexwebdev/laravel-siwx)
+[![tests](https://img.shields.io/github/actions/workflow/status/LexWebDev/laravel-siwx/tests.yml?branch=main&logo=github&label=tests)](https://github.com/LexWebDev/laravel-siwx/actions/workflows/tests.yml?query=branch%3Amain)
+[![license](https://img.shields.io/packagist/l/lexwebdev/laravel-siwx?color=blue)](LICENSE)
 
 Server-side Sign-In With X verification for Laravel. Verifies wallet signatures over
 [EIP-4361](https://eips.ethereum.org/EIPS/eip-4361) messages for **EVM** and **Solana**
