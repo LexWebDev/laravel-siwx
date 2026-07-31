@@ -18,18 +18,20 @@
     "require": {
         "php": "^8.2",
         "ext-sodium": "*",
-        "illuminate/support": "^12.0|^13.0",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
         "simplito/elliptic-php": "^1.0",
         "kornrunner/keccak": "^1.1",
         "stephenhill/base58": "^1.1"
     },
     "require-dev": {
-        "orchestra/testbench": "^10.0|^11.0",
-        "pestphp/pest": "^3.0|^4.0"
+        "guzzlehttp/guzzle": "^7.0",
+        "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+        "pestphp/pest": "^2.0|^3.0|^4.0"
     },
     "suggest": {
         "ext-gmp": "Fast secp256k1 math for EVM signature recovery (ext-bcmath works as a slower fallback)",
-        "ext-bcmath": "Fallback secp256k1 math for EVM signature recovery when ext-gmp is unavailable"
+        "ext-bcmath": "Fallback secp256k1 math for EVM signature recovery when ext-gmp is unavailable",
+        "guzzlehttp/guzzle": "Required by the Laravel HTTP client when EIP-1271 verification is enabled"
     },
     "autoload": { "psr-4": { "LexWebDev\\Siwx\\": "src/" } },
     "autoload-dev": { "psr-4": { "LexWebDev\\Siwx\\Tests\\": "tests/" } },
