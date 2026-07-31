@@ -185,6 +185,33 @@ createAppKit({
 On the One-Click Auth path `createMessage` is called without an address, so the nonce cannot be
 derived from the wallet — fetch it from `GET /siwx/nonce` first.
 
+### One-Click Auth only fires in a single-namespace app
+
+AppKit attempts One-Click Auth — `wc_sessionAuthenticate`, which returns a CACAO and a message
+built by WalletConnect rather than by your `createMessage` — only when the networks you register
+belong to **exactly one** namespace, and that namespace is `eip155`. The check lives in
+`SIWXUtil.universalProviderAuthenticate`:
+
+```js
+const namespaces = new Set(chains.map(chain => chain.split(':')[0]))
+if (!siwx || namespaces.size !== 1 || !namespaces.has('eip155')) {
+  return false
+}
+```
+
+So an app that registers EVM chains **and** Solana in the same AppKit instance never produces a
+CACAO: every sign-in falls back to a plain `personal_sign` of the message your own code composed.
+That is worth knowing before you go looking for a bug in your `Resources` handling — there simply
+will not be a `Resources` section to handle.
+
+This package verifies both shapes either way, so nothing here needs configuring. The note is about
+what you should expect to see on the wire.
+
+Two things follow for testing. A wallet that does not implement `wc_sessionAuthenticate` also falls
+back silently, so an absent CACAO does not by itself tell you which side declined. And the request
+is sent during connection, not at signing time: if you see a signature prompt arrive after the
+session is already established, One-Click Auth did not happen.
+
 ## Smart contract wallets (EIP-1271)
 
 Off by default. When enabled, a signature that fails `ecrecover` gets a second chance through
