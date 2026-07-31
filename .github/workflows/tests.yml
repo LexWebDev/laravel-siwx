@@ -29,12 +29,13 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: gmp, bcmath, sodium
       # Every 10.x and 11.x release carries unpatched advisories and no fixed release exists,
-      # so Composer 2.10+ refuses to install the framework under its default policy. The
-      # package itself is unaffected: a consumer already running Laravel 10 or 11 keeps the
-      # framework it has. Only building it from scratch, as CI does, needs the older resolver.
-      - name: Downgrade composer for the closed Laravel branches
+      # so Composer refuses to resolve the framework under its default policy. The package
+      # itself is unaffected: a consumer already running Laravel 10 or 11 keeps the framework
+      # it has. Only building such an environment from scratch, as CI does, needs the opt-out,
+      # and it is scoped to these two jobs so the supported branches stay under the policy.
+      - name: Allow the closed Laravel branches to resolve
         if: matrix.laravel == '10.*' || matrix.laravel == '11.*'
-        run: composer self-update 2.8.12
+        run: echo "COMPOSER_NO_BLOCKING=1" >> "$GITHUB_ENV"
       - run: composer require "illuminate/support:${{ matrix.laravel }}" --no-interaction --no-update
       - run: composer update --prefer-dist --no-interaction
       - run: vendor/bin/pest

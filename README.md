@@ -245,11 +245,11 @@ in those branches exists or ever will. This package works there, and installing 
 nothing about that exposure either way: your application already has the framework it has.
 But the framework is what it is, and upgrading it is worth planning for.
 
-One practical consequence: Composer 2.10+ refuses to install those releases from scratch under
-its default advisory policy. This does not affect `composer require lexwebdev/laravel-siwx` in
-an existing application — the framework there is already installed and is not touched. It only
-affects building such an environment from nothing, which is why CI pins an older Composer for
-those two jobs.
+One practical consequence: Composer refuses to resolve those releases from scratch under its
+default advisory policy. This does not affect `composer require lexwebdev/laravel-siwx` in an
+existing application — the framework there is already installed and is not touched. It only
+affects building such an environment from nothing, which is why CI sets
+`COMPOSER_NO_BLOCKING=1` for those jobs alone.
 
 ## Contributing
 

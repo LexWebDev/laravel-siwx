@@ -31,11 +31,11 @@ this release is constraints, CI and documentation.
 ### Note on Laravel 10 and 11
 
 Both branches are closed and every release in them carries unpatched advisories, `CVE-2026-48019`
-among them. That is why 0.1.0 excluded Laravel 11. The reasoning has changed: the advisory policy
-in Composer 2.10+ blocks building those environments from scratch, which is a CI problem, not a
-consumer one — an application already running Laravel 10 keeps the framework it has, and
-installing this package does not touch it. CI pins Composer 2.8.12 for those two jobs and
-verifies them like any other.
+among them. That is why 0.1.0 excluded Laravel 11. The reasoning has changed: Composer's advisory
+policy blocks building those environments from scratch, which is a CI problem, not a consumer one
+— an application already running Laravel 10 keeps the framework it has, and installing this
+package does not touch it. CI opts out of the policy through `COMPOSER_NO_BLOCKING=1` on those
+jobs alone, and verifies them like any other.
 
 PHP 8.1 is still not supported, even though Laravel 10 permits it. It reached end of life in
 December 2025.
