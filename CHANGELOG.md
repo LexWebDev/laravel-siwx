@@ -6,6 +6,40 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-31
+
+Adds Laravel 10 and 11 to the supported range. No behaviour changed and no verification code was
+touched: the package only ever used framework APIs that are identical across 10 through 13, so
+this release is constraints, CI and documentation.
+
+### Added
+
+- Support for Laravel 10 and 11. `illuminate/support` now accepts `^10.0|^11.0|^12.0|^13.0`.
+- `guzzlehttp/guzzle` as a suggestion. The Laravel HTTP client needs it, so an application that
+  enables EIP-1271 verification needs it too. This was never stated before.
+- CI matrix entries for both new branches, bringing it to 12 combinations. Laravel 10 is
+  exercised on PHP 8.2 and 8.3, Laravel 11 on 8.2 through 8.4 — the interpreters each branch
+  saw during its lifetime.
+
+### Fixed
+
+- `guzzlehttp/guzzle` is now a dev dependency. It used to arrive transitively through
+  `orchestra/testbench` 10 and 11, but not through testbench 8, which left the three EIP-1271
+  tests failing on Laravel 10 with `Class "GuzzleHttp\Psr7\Response" not found` — `Http::fake()`
+  builds a Guzzle response internally.
+
+### Note on Laravel 10 and 11
+
+Both branches are closed and every release in them carries unpatched advisories, `CVE-2026-48019`
+among them. That is why 0.1.0 excluded Laravel 11. The reasoning has changed: the advisory policy
+in Composer 2.10+ blocks building those environments from scratch, which is a CI problem, not a
+consumer one — an application already running Laravel 10 keeps the framework it has, and
+installing this package does not touch it. CI pins Composer 2.8.12 for those two jobs and
+verifies them like any other.
+
+PHP 8.1 is still not supported, even though Laravel 10 permits it. It reached end of life in
+December 2025.
+
 ## [0.1.0] - 2026-07-30
 
 Initial release. Requires Laravel 12 or 13; Laravel 11 is not supported, because every release
@@ -44,5 +78,6 @@ One path could not be exercised: no available wallet honoured `wc_sessionAuthent
 messages and their `Resources` section are covered by a constructed vector rather than a captured
 one. The parser skips that section by construction.
 
-[Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/LexWebDev/laravel-siwx/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/LexWebDev/laravel-siwx/releases/tag/v0.1.0

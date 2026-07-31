@@ -231,14 +231,25 @@ touches the network; swap the implementation by rebinding
 
 | | |
 |---|---|
-| PHP | 8.2+ for Laravel 12, 8.3+ for Laravel 13 (framework requirement) |
-| Laravel | 12, 13 |
+| PHP | 8.2+, except Laravel 13, which requires 8.3+ (framework requirement) |
+| Laravel | 10, 11, 12, 13 |
 | Extensions | `ext-sodium` for ed25519, `ext-gmp` for secp256k1 (pulled in by `simplito/elliptic-php`) |
 
-Laravel 11 is not supported. Every release in that branch, from v11.7.0 through the final
-v11.55.0, is affected by unpatched security advisories, and Composer 2.10+ refuses to install
-them under its default advisory policy — so the framework itself is unavailable there,
-independently of this package.
+Every combination in that range runs the full suite on CI.
+
+### A warning if you are on Laravel 10 or 11
+
+Both branches are closed, and every release in them carries unpatched security advisories —
+among them `CVE-2026-48019`, whose affected range covers all of 10.x and 11.x. No fixed release
+in those branches exists or ever will. This package works there, and installing it changes
+nothing about that exposure either way: your application already has the framework it has.
+But the framework is what it is, and upgrading it is worth planning for.
+
+One practical consequence: Composer 2.10+ refuses to install those releases from scratch under
+its default advisory policy. This does not affect `composer require lexwebdev/laravel-siwx` in
+an existing application — the framework there is already installed and is not touched. It only
+affects building such an environment from nothing, which is why CI pins an older Composer for
+those two jobs.
 
 ## Contributing
 
