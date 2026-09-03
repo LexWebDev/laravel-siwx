@@ -10,6 +10,8 @@ final class SiwxParser
 {
     private const HEADER = '/^(?P<domain>[^\s]+) wants you to sign in with your (?P<network>.+) account:$/u';
 
+    private const RECAP_SENTENCE = 'I further authorize the stated URI to perform the following actions on my behalf:';
+
     private const FIELD_KEYS = [
         'URI', 'Version', 'Chain ID', 'Nonce',
         'Issued At', 'Expiration Time', 'Not Before', 'Request ID',
@@ -30,8 +32,9 @@ final class SiwxParser
             throw new SiwxException('siwx_invalid_message');
         }
 
-        $statement = $this->extractStatement($lines);
+        $signedStatement = $this->extractStatement($lines);
         $fields = $this->extractFields($lines);
+        $resources = $this->extractResources($lines);
 
         [$namespace, $chainId] = $this->resolveChain($this->required($fields, 'Chain ID'));
 
@@ -40,7 +43,8 @@ final class SiwxParser
             domain: $header['domain'],
             network: $header['network'],
             address: $address,
-            statement: $statement,
+            statement: $this->stripRecapSentence($signedStatement, $resources),
+            signedStatement: $signedStatement,
             uri: $this->required($fields, 'URI'),
             version: $this->required($fields, 'Version'),
             namespace: $namespace,
@@ -49,6 +53,7 @@ final class SiwxParser
             issuedAt: $this->time($this->required($fields, 'Issued At')),
             expirationTime: isset($fields['Expiration Time']) ? $this->time($fields['Expiration Time']) : null,
             notBefore: isset($fields['Not Before']) ? $this->time($fields['Not Before']) : null,
+            resources: $resources,
         );
     }
 
@@ -88,6 +93,54 @@ final class SiwxParser
         }
 
         return $fields;
+    }
+
+    private function extractResources(array $lines): array
+    {
+        $resources = [];
+        $inResources = false;
+
+        foreach ($lines as $line) {
+            if ($line === 'Resources:') {
+                $inResources = true;
+
+                continue;
+            }
+
+            if ($inResources && str_starts_with($line, '- ')) {
+                $resources[] = substr($line, 2);
+            }
+        }
+
+        return $resources;
+    }
+
+    private function stripRecapSentence(?string $statement, array $resources): ?string
+    {
+        if ($statement === null || ! $this->hasRecapResource($resources)) {
+            return $statement;
+        }
+
+        $position = strpos($statement, self::RECAP_SENTENCE);
+
+        if ($position === false) {
+            return $statement;
+        }
+
+        $base = rtrim(substr($statement, 0, $position));
+
+        return $base === '' ? null : $base;
+    }
+
+    private function hasRecapResource(array $resources): bool
+    {
+        foreach ($resources as $resource) {
+            if (str_starts_with($resource, 'urn:recap:')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function resolveChain(string $value): array

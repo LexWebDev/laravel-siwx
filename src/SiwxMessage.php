@@ -12,6 +12,7 @@ final readonly class SiwxMessage
         public string $network,
         public string $address,
         public ?string $statement,
+        public ?string $signedStatement,
         public string $uri,
         public string $version,
         public string $namespace,
@@ -20,5 +21,6 @@ final readonly class SiwxMessage
         public CarbonImmutable $issuedAt,
         public ?CarbonImmutable $expirationTime,
         public ?CarbonImmutable $notBefore,
+        public array $resources = [],
     ) {}
 }

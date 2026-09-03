@@ -81,3 +81,51 @@ it('rejects a message without a nonce', function () {
 it('rejects a short nonce', function () {
     (new SiwxParser)->parse(str_replace('8Kc2fQ1pXm9Zr4Lt', 'abc', EVM_MESSAGE));
 })->throws(SiwxException::class);
+
+const RECAP_SENTENCE = "I further authorize the stated URI to perform the following actions on my behalf: "
+    . "(1) 'request': 'personal_sign' for 'eip155'.";
+
+const RECAP_RESOURCE = 'urn:recap:eyJhdHQiOnsiZWlwMTU1Ijp7InJlcXVlc3QvcGVyc29uYWxfc2lnbiI6W3t9XX19fQ';
+
+it('separates the erc-5573 recap sentence from the statement on one-click auth', function () {
+    $raw = str_replace(
+        'Sign in with Ethereum to the application.',
+        'Sign in with Ethereum to the application. ' . RECAP_SENTENCE,
+        EVM_RESOURCES_MESSAGE,
+    );
+
+    $message = (new SiwxParser)->parse($raw);
+
+    expect($message->statement)->toBe('Sign in with Ethereum to the application.')
+        ->and($message->signedStatement)->toBe('Sign in with Ethereum to the application. ' . RECAP_SENTENCE)
+        ->and($message->resources)->toBe([RECAP_RESOURCE]);
+});
+
+it('yields a null statement when one-click auth only carried the recap sentence', function () {
+    $raw = str_replace('Sign in with Ethereum to the application.', RECAP_SENTENCE, EVM_RESOURCES_MESSAGE);
+
+    $message = (new SiwxParser)->parse($raw);
+
+    expect($message->statement)->toBeNull()
+        ->and($message->signedStatement)->toBe(RECAP_SENTENCE);
+});
+
+it('leaves the statement untouched when no recap resource backs the sentence', function () {
+    $raw = str_replace(
+        'Sign in with Ethereum to the application.',
+        'Sign in with Ethereum to the application. ' . RECAP_SENTENCE,
+        EVM_MESSAGE,
+    );
+
+    $message = (new SiwxParser)->parse($raw);
+
+    expect($message->statement)->toBe('Sign in with Ethereum to the application. ' . RECAP_SENTENCE)
+        ->and($message->resources)->toBe([]);
+});
+
+it('exposes the signed statement and resources on a plain message', function () {
+    $message = (new SiwxParser)->parse(EVM_MESSAGE);
+
+    expect($message->signedStatement)->toBe('Sign in with Ethereum to the application.')
+        ->and($message->resources)->toBe([]);
+});
