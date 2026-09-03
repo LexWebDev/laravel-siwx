@@ -6,6 +6,26 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-03
+
+Fixes One-Click Auth logins against applications that compare the statement with the text they
+requested. The verification code is untouched: what changed is which part of the statement line
+`SiwxMessage` reports as the statement.
+
+### Changed
+
+- `SiwxMessage::$statement` no longer includes the ERC-5573 recap sentence that WalletConnect
+  One-Click Auth appends (`I further authorize the stated URI to perform the following actions on
+  my behalf: …`). The sentence is stripped only when a `urn:recap:` entry is present in the
+  `Resources` section, which is the sole case in which the wallet generates it. Applications that
+  compared `statement` with the text they requested rejected every One-Click Auth login with
+  `siwx_invalid_message`; they now match without changes on their side.
+
+### Added
+
+- `SiwxMessage::$signedStatement` — the statement line exactly as signed, recap sentence included.
+- `SiwxMessage::$resources` — the entries of the `Resources` section, in order.
+
 ## [0.2.0] - 2026-07-31
 
 Adds Laravel 10 and 11 to the supported range. No behaviour changed and no verification code was
@@ -78,6 +98,7 @@ One path could not be exercised: no available wallet honoured `wc_sessionAuthent
 messages and their `Resources` section are covered by a constructed vector rather than a captured
 one. The parser skips that section by construction.
 
-[Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/LexWebDev/laravel-siwx/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LexWebDev/laravel-siwx/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/LexWebDev/laravel-siwx/releases/tag/v0.1.0

@@ -25,6 +25,12 @@ shows up:
   Both arrive at the same endpoint. This package accepts both and normalises to CAIP-2.
 - **One-Click Auth appends a `Resources:` section** with a `urn:recap:` capability. It is part
   of the signed bytes, so it must be preserved for verification and ignored for field parsing.
+- **One-Click Auth rewrites the statement.** Per [ERC-5573](https://eips.ethereum.org/EIPS/eip-5573)
+  the wallet appends `I further authorize the stated URI to perform the following actions on my
+  behalf: (1) 'request': 'personal_sign' …` to whatever statement the app asked for, and the list
+  of methods differs from wallet to wallet. An application that compares the statement with the
+  text it requested rejects every mobile login. This package returns the app's own statement in
+  `statement` and keeps the full signed line in `signedStatement`.
 - **Address casing is chain-specific.** Lowercasing a Solana base58 address turns it into a
   different, non-existent account.
 
@@ -127,6 +133,17 @@ $session->domain;
 $session->issuedAt;   // CarbonImmutable
 $session->message;    // the parsed SiwxMessage
 ```
+
+`SiwxMessage` carries every parsed field. The ones worth knowing about when you validate intent:
+
+```php
+$message->statement;        // what your app asked the wallet to sign, recap sentence removed
+$message->signedStatement;  // the statement line exactly as it appears in the signed message
+$message->resources;        // entries of the Resources section, e.g. ['urn:recap:…']
+```
+
+Compare `statement` — not `signedStatement` — with the text you requested. On the One-Click Auth
+path the two differ, and the difference is wallet-specific.
 
 ### Storing the address
 
