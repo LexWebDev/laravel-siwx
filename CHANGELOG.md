@@ -6,6 +6,10 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-02
+
+Widens one runtime constraint. No code changed.
+
 ### Changed
 
 - `stephenhill/base58` now accepts `^1.1|^2.0`. Version 2 keeps the API and only adds type
@@ -109,7 +113,8 @@ One path could not be exercised: no available wallet honoured `wc_sessionAuthent
 messages and their `Resources` section are covered by a constructed vector rather than a captured
 one. The parser skips that section by construction.
 
-[Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/LexWebDev/laravel-siwx/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/LexWebDev/laravel-siwx/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/LexWebDev/laravel-siwx/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LexWebDev/laravel-siwx/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/LexWebDev/laravel-siwx/releases/tag/v0.1.0
