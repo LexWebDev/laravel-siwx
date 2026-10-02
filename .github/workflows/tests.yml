@@ -1,5 +1,12 @@
 name: tests
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  # Nothing is pinned: every job resolves the newest framework and dependencies, so a release or
+  # an advisory published after the last push can break installation. The weekly run catches it.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest

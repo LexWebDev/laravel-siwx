@@ -6,6 +6,17 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `stephenhill/base58` now accepts `^1.1|^2.0`. Version 2 keeps the API and only adds type
+  declarations, but the old constraint made the package uninstallable next to anything that
+  already required base58 2.
+
+### Added
+
+- A weekly scheduled CI run and a manual trigger, so a framework release or a new advisory that
+  breaks installation shows up between pushes rather than in a user's bug report.
+
 ## [0.3.0] - 2026-09-03
 
 Fixes One-Click Auth logins against applications that compare the statement with the text they
