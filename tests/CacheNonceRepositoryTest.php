@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Cache\ArrayStore;
+use Illuminate\Support\Facades\Cache;
+use LexWebDev\Siwx\CacheNonceRepository;
 use LexWebDev\Siwx\Contracts\NonceRepository;
 use LexWebDev\Siwx\Exceptions\SiwxException;
 
@@ -35,4 +38,43 @@ it('issues unique nonces', function () {
     $repository = app(NonceRepository::class);
 
     expect($repository->issue())->not->toBe($repository->issue());
+});
+
+it('lets only one of two concurrent requests consume a nonce', function () {
+    $store = new class extends ArrayStore {
+        public ?Closure $afterFirstRead = null;
+
+        public function get($key)
+        {
+            $value = parent::get($key);
+            $interleave = $this->afterFirstRead;
+            $this->afterFirstRead = null;
+
+            if ($interleave !== null) {
+                $interleave();
+            }
+
+            return $value;
+        }
+    };
+
+    Cache::extend('interleaved', fn () => Cache::repository($store));
+    config()->set('cache.stores.interleaved', ['driver' => 'interleaved']);
+
+    $repository = new CacheNonceRepository(app('cache'), 'interleaved', 600);
+    $nonce = $repository->issue();
+    $accepted = 0;
+
+    $store->afterFirstRead = function () use ($repository, $nonce, &$accepted) {
+        $repository->consume($nonce);
+        $accepted++;
+    };
+
+    try {
+        $repository->consume($nonce);
+        $accepted++;
+    } catch (SiwxException) {
+    }
+
+    expect($accepted)->toBe(1);
 });

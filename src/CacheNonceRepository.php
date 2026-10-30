@@ -26,9 +26,14 @@ final class CacheNonceRepository implements NonceRepository
 
     public function consume(string $nonce): void
     {
-        if (! $this->cache->store($this->store)->pull($this->key($nonce))) {
+        $store = $this->cache->store($this->store);
+        $key = $this->key($nonce);
+
+        if (! $store->has($key) || ! $store->add($key . ':consumed', true, $this->ttl)) {
             throw new SiwxException('siwx_invalid_nonce');
         }
+
+        $store->forget($key);
     }
 
     private function key(string $nonce): string
