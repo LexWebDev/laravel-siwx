@@ -269,8 +269,7 @@ the config and map each chain to its own endpoint:
 Once the map is set, a chain outside it fails verification and `rpc_url` is ignored.
 
 **A contract address belongs to one chain, not to one owner.** The same address can be controlled
-by different parties on two networks, and an EOA login cannot tell you which network was meant. If
-you map more than one chain, key contract-wallet accounts by `($session->chainId, $session->address)`
+by different parties on two networks. If you map more than one chain, key contract-wallet accounts by `($session->chainId, $session->address)`
 rather than by address alone, or map only the single chain you trust. With `SIWX_RPC_URL` the
 session reports the chain the message claims, not the one that was checked, so treat
 `$session->chainId` as unverified in that mode.
