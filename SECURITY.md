@@ -10,7 +10,7 @@ then report if the issue persists.
 
 | Version | Supported |
 |---|---|
-| 0.3.x | yes |
+| 0.4.x | yes |
 
 ## Reporting a vulnerability
 
