@@ -78,6 +78,7 @@ SIWX_CLOCK_SKEW=300
 SIWX_CACHE_STORE=
 SIWX_ROUTES_ENABLED=true
 SIWX_ROUTES_PREFIX=siwx
+SIWX_ROUTES_THROTTLE=60,1
 SIWX_EIP1271_ENABLED=false
 SIWX_RPC_URL=
 ```
@@ -95,6 +96,11 @@ could otherwise name one domain and point its URI at the other.
 The package ships `GET /siwx/nonce`, which returns `{"nonce": "..."}`. Nonces are single use
 and expire after `SIWX_NONCE_TTL` seconds. Disable the route with `SIWX_ROUTES_ENABLED=false`
 if you want to issue nonces yourself.
+
+The route runs under `api` and `throttle:60,1`, because every request writes to the cache. Tune
+the limit with `SIWX_ROUTES_THROTTLE`, or replace the whole stack through
+`siwx.routes.middleware`. Behind a proxy, configure trusted proxies first: otherwise all your
+visitors share one client IP and one limit.
 
 Authentication routes are deliberately not included — they depend on your user model and token
 strategy. A minimal controller:
@@ -123,7 +129,9 @@ public function auth(Request $request, SiwxVerifier $verifier): JsonResponse
 ```
 
 `verify()` throws `LexWebDev\Siwx\Exceptions\SiwxException` on any failure and returns a
-`VerifiedSiwxSession` on success:
+`VerifiedSiwxSession` on success. Left uncaught, the exception becomes a `401` with
+`{"message": "siwx_invalid_signature"}` and is not reported to your logs; a `renderable` callback
+or your own `try`/`catch` takes precedence.
 
 ```php
 $session->address;    // normalised per chain
@@ -140,6 +148,8 @@ $session->message;    // the parsed SiwxMessage
 $message->statement;        // what your app asked the wallet to sign, recap sentence removed
 $message->signedStatement;  // the statement line exactly as it appears in the signed message
 $message->resources;        // entries of the Resources section, e.g. ['urn:recap:…']
+$message->scheme;           // optional scheme of the header line, e.g. 'https', or null
+$message->requestId;        // the Request ID field, or null
 ```
 
 Compare `statement` — not `signedStatement` — with the text you requested. On the One-Click Auth
@@ -166,7 +176,7 @@ into it — you get the code, not a "recovered 0xabc, expected 0xdef" diagnostic
 
 | Code | Meaning |
 |---|---|
-| `siwx_invalid_message` | malformed EIP-4361 message, bad version, or a failed timestamp check |
+| `siwx_invalid_message` | message breaks the EIP-4361 grammar (duplicate or unknown fields, a multi-line statement, timestamps outside RFC 3339, a `Chain ID` outside CAIP-2), bad version, or a failed timestamp check |
 | `siwx_invalid_domain` | `domain` or `URI` host is not in the allow list, or the list is empty |
 | `siwx_invalid_nonce` | nonce was never issued, already used, or expired |
 | `siwx_invalid_signature` | signature does not belong to the claimed address |
@@ -242,7 +252,24 @@ SIWX_EIP1271_ENABLED=true
 SIWX_RPC_URL=https://your-rpc-endpoint
 ```
 
-EOA logins never pay for this — the RPC call only happens after recovery fails. An RPC error
+`SIWX_RPC_URL` serves every chain, so the signature is checked on that endpoint's network whatever
+`Chain ID` the message names. Use it only if you accept a single chain. For anything else, publish
+the config and map each chain to its own endpoint:
+
+```php
+'eip1271' => [
+    'enabled' => true,
+    'rpc_urls' => [
+        'eip155:1' => env('SIWX_RPC_URL_MAINNET'),
+        'eip155:8453' => env('SIWX_RPC_URL_BASE'),
+    ],
+],
+```
+
+Once the map is set, a chain outside it fails verification and `rpc_url` is ignored.
+
+EOA logins never pay for this — the RPC call only happens after recovery fails, and only for a
+nonce that is still live, so a request with a made-up nonce costs you no RPC quota. An RPC error
 is treated as an invalid signature, not an exception. This is the only place the package
 touches the network; swap the implementation by rebinding
 `LexWebDev\Siwx\Contracts\ContractSignatureChecker`.

@@ -8,8 +8,8 @@ use LexWebDev\Siwx\Exceptions\SiwxException;
 use LexWebDev\Siwx\RpcContractSignatureChecker;
 use LexWebDev\Siwx\SiwxParser;
 use LexWebDev\Siwx\SiwxVerifier;
-use LexWebDev\Siwx\Verifiers\Eip155Verifier;
 use LexWebDev\Siwx\VerifierRegistry;
+use LexWebDev\Siwx\Verifiers\Eip155Verifier;
 
 it('falls back to the contract checker when recovery does not match', function () {
     $checker = new class implements ContractSignatureChecker

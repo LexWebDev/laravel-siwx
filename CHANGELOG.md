@@ -6,6 +6,33 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+The parser now enforces the EIP-4361 grammar, and two public interfaces changed. Implementers of
+either contract must update before upgrading.
+
+### Changed
+
+- **Breaking:** `ContractSignatureChecker::isValid()` takes a fourth argument, `string $chainId`.
+- **Breaking:** `NonceRepository` gains `exists(string $nonce): bool`.
+- **Breaking:** `SiwxParser` rejects with `siwx_invalid_message` what it used to tolerate: duplicate
+  or unknown fields, anything after `Resources`, a multi-line statement, timestamps outside
+  RFC 3339 such as `now` or `+1 day`, and a `Chain ID` outside CAIP-2.
+- The nonce is checked for existence before the signature, without being consumed. A request with
+  a made-up nonce gets `siwx_invalid_nonce` and no longer triggers an `eth_call`.
+- `SiwxException` extends `HttpException`. Left uncaught it renders as `401` with the machine code
+  and is not reported to logs, where it used to be a `500`.
+- `GET /siwx/nonce` runs under `throttle:60,1` by default.
+
+### Added
+
+- `siwx.eip1271.rpc_urls` maps each CAIP-2 chain to its own RPC endpoint.
+- `siwx.routes.middleware` and `SIWX_ROUTES_THROTTLE`.
+- `SiwxMessage::$scheme` and `SiwxMessage::$requestId`. A header with the optional scheme allowed
+  by EIP-4361 is now accepted.
+
+### Fixed
+
+- Spaces around entries of `SIWX_ALLOWED_DOMAINS` no longer silently break the match.
+
 ## [0.3.2] - 2026-10-30
 
 Security fix. Upgrade if two parallel requests with the same signed message must not both pass.

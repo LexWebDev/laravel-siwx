@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use LexWebDev\Siwx\Exceptions\SiwxException;
@@ -22,7 +23,7 @@ it('does not report a failed login to the logs', function () {
 });
 
 it('still lets the application render the failure itself', function () {
-    app(Illuminate\Contracts\Debug\ExceptionHandler::class)->renderable(
+    app(ExceptionHandler::class)->renderable(
         fn (SiwxException $exception) => response()->json(['code' => $exception->code()], 422),
     );
     Route::post('/login', fn () => throw new SiwxException('siwx_invalid_nonce'));
