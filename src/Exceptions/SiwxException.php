@@ -2,13 +2,13 @@
 
 namespace LexWebDev\Siwx\Exceptions;
 
-use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class SiwxException extends RuntimeException
+class SiwxException extends HttpException
 {
     public function __construct(private readonly string $errorCode)
     {
-        parent::__construct($errorCode);
+        parent::__construct(401, $errorCode);
     }
 
     public function code(): string
