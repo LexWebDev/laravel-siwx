@@ -58,7 +58,7 @@ it('keeps throttling under a config published before the middleware option', fun
 });
 
 it('uses the middleware the application configured', function () {
-    config()->set('siwx.routes', ['enabled' => true, 'prefix' => 'custom', 'middleware' => ['api']]);
+    config()->set('siwx.routes', ['enabled' => true, 'prefix' => 'custom', 'middleware' => []]);
 
     (new SiwxServiceProvider(app()))->boot();
 

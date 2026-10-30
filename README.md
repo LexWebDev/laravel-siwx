@@ -268,6 +268,13 @@ the config and map each chain to its own endpoint:
 
 Once the map is set, a chain outside it fails verification and `rpc_url` is ignored.
 
+**A contract address belongs to one chain, not to one owner.** The same address can be controlled
+by different parties on two networks, and an EOA login cannot tell you which network was meant. If
+you map more than one chain, key contract-wallet accounts by `($session->chainId, $session->address)`
+rather than by address alone, or map only the single chain you trust. With `SIWX_RPC_URL` the
+session reports the chain the message claims, not the one that was checked, so treat
+`$session->chainId` as unverified in that mode.
+
 EOA logins never pay for this — the RPC call only happens after recovery fails, and only for a
 nonce that is still live, so a request with a made-up nonce costs you no RPC quota. An RPC error
 is treated as an invalid signature, not an exception. This is the only place the package
