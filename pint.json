@@ -1,0 +1,9 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "concat_space": { "spacing": "one" },
+        "new_with_parentheses": { "named_class": false, "anonymous_class": false },
+        "not_operator_with_successor_space": true
+    },
+    "notPath": ["tests/Pest.php"]
+}

@@ -22,7 +22,7 @@ final class SiwxParser
         $normalised = trim(str_replace("\r\n", "\n", $raw));
         $lines = explode("\n", $normalised);
 
-        if (! preg_match(self::HEADER, array_shift($lines) ?? '', $header)) {
+        if (! preg_match(self::HEADER, array_shift($lines), $header)) {
             throw new SiwxException('siwx_invalid_message');
         }
 

@@ -28,9 +28,13 @@ jobs:
             laravel: '10.*'
           - php: '8.5'
             laravel: '11.*'
+        include:
+          - php: '8.6'
+            laravel: '13.*'
+    continue-on-error: ${{ matrix.php == '8.6' }}
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -46,3 +50,16 @@ jobs:
       - run: composer require "illuminate/support:${{ matrix.laravel }}" --no-interaction --no-update
       - run: composer update --prefer-dist --no-interaction
       - run: vendor/bin/pest
+  quality:
+    runs-on: ubuntu-latest
+    name: Pint and Larastan
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gmp, bcmath, sodium
+      - run: composer require --dev laravel/pint larastan/larastan --no-interaction --no-update
+      - run: composer update --prefer-dist --no-interaction
+      - run: vendor/bin/pint --test
+      - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
