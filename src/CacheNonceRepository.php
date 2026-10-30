@@ -24,6 +24,11 @@ final class CacheNonceRepository implements NonceRepository
         return $nonce;
     }
 
+    public function exists(string $nonce): bool
+    {
+        return $this->cache->store($this->store)->has($this->key($nonce));
+    }
+
     public function consume(string $nonce): void
     {
         $store = $this->cache->store($this->store);

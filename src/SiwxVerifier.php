@@ -25,6 +25,10 @@ final class SiwxVerifier
         $this->assertVersion($message);
         $this->assertTimestamps($message);
 
+        if (! $this->nonces->exists($message->nonce)) {
+            throw new SiwxException('siwx_invalid_nonce');
+        }
+
         if (! $verifier->verify($message, $signature)) {
             throw new SiwxException('siwx_invalid_signature');
         }

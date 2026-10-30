@@ -79,3 +79,16 @@ it('lets only one of two concurrent requests consume a nonce', function () {
 
     expect($accepted)->toBe(1);
 });
+
+it('reports whether a nonce is still live without consuming it', function () {
+    $repository = app(NonceRepository::class);
+    $nonce = $repository->issue();
+
+    expect($repository->exists($nonce))->toBeTrue()
+        ->and($repository->exists($nonce))->toBeTrue()
+        ->and($repository->exists('neverIssued123'))->toBeFalse();
+
+    $repository->consume($nonce);
+
+    expect($repository->exists($nonce))->toBeFalse();
+});
