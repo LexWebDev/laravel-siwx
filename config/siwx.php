@@ -9,6 +9,7 @@ return [
     'routes' => [
         'enabled' => env('SIWX_ROUTES_ENABLED', true),
         'prefix' => env('SIWX_ROUTES_PREFIX', 'siwx'),
+        'middleware' => ['api', 'throttle:' . env('SIWX_ROUTES_THROTTLE', '60,1')],
     ],
     'eip1271' => [
         'enabled' => env('SIWX_EIP1271_ENABLED', false),

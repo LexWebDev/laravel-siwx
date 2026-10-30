@@ -42,7 +42,7 @@ class SiwxServiceProvider extends ServiceProvider
             new SiwxParser,
             $app->make(VerifierRegistry::class),
             $app->make(NonceRepository::class),
-            (array) $app['config']->get('siwx.domains'),
+            array_filter(array_map('trim', (array) $app['config']->get('siwx.domains'))),
             (int) $app['config']->get('siwx.clock_skew'),
         ));
     }
@@ -51,7 +51,7 @@ class SiwxServiceProvider extends ServiceProvider
     {
         if ($this->app['config']->get('siwx.routes.enabled')) {
             Route::prefix($this->app['config']->get('siwx.routes.prefix'))
-                ->middleware('api')
+                ->middleware($this->app['config']->get('siwx.routes.middleware', ['api', 'throttle:60,1']))
                 ->group(__DIR__ . '/../routes/siwx.php');
         }
 

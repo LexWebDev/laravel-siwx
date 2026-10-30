@@ -1,6 +1,7 @@
 <?php
 
 use LexWebDev\Siwx\Exceptions\SiwxException;
+use LexWebDev\Siwx\SiwxServiceProvider;
 use LexWebDev\Siwx\SiwxVerifier;
 
 it('returns a nonce', function () {
@@ -33,5 +34,35 @@ it('rejects a message whose nonce was swapped after signing', function () {
         app(SiwxVerifier::class)->verify($message, EVM_SIG);
     } catch (SiwxException $exception) {
         expect($exception->code())->toBe('siwx_invalid_signature');
+    }
+});
+
+it('throttles the nonce route', function () {
+    for ($request = 0; $request < 60; $request++) {
+        $this->getJson('/siwx/nonce')->assertOk();
+    }
+
+    $this->getJson('/siwx/nonce')->assertTooManyRequests();
+});
+
+it('keeps throttling under a config published before the middleware option', function () {
+    config()->set('siwx.routes', ['enabled' => true, 'prefix' => 'published']);
+
+    (new SiwxServiceProvider(app()))->boot();
+
+    for ($request = 0; $request < 60; $request++) {
+        $this->getJson('/published/nonce')->assertOk();
+    }
+
+    $this->getJson('/published/nonce')->assertTooManyRequests();
+});
+
+it('uses the middleware the application configured', function () {
+    config()->set('siwx.routes', ['enabled' => true, 'prefix' => 'custom', 'middleware' => ['api']]);
+
+    (new SiwxServiceProvider(app()))->boot();
+
+    for ($request = 0; $request < 61; $request++) {
+        $this->getJson('/custom/nonce')->assertOk();
     }
 });

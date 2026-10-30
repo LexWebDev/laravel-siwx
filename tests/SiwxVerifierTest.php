@@ -147,3 +147,9 @@ it('matches the allow list on the domain when the header carries a scheme', func
 
     expect($code)->toBe('siwx_invalid_signature');
 });
+
+it('tolerates spaces around entries of the allow list', function () {
+    config()->set('siwx.domains', ['other.example', ' dapp.expert ']);
+
+    expect(app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_SIG)->domain)->toBe('dapp.expert');
+});
