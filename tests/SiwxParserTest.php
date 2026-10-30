@@ -148,6 +148,11 @@ it('rejects a message that breaks the eip-4361 grammar', function (string $raw) 
     'relative expiration' => [EVM_MESSAGE . "\nExpiration Time: +100 years"],
     'date without time' => [EVM_MESSAGE . "\nNot Before: 2026-07-30"],
     'date without offset' => [EVM_MESSAGE . "\nNot Before: 2026-07-30T12:34:56"],
+    'impossible date' => [EVM_MESSAGE . "\nNot Before: 2026-02-31T12:34:56Z"],
+    'sixtieth second' => [EVM_MESSAGE . "\nNot Before: 2026-07-30T12:34:60Z"],
+    'empty uri' => [str_replace('URI: https://dapp.expert', 'URI: ', EVM_MESSAGE)],
+    'empty version' => [str_replace('Version: 1', 'Version: ', EVM_MESSAGE)],
+    'stray carriage return' => [str_replace('URI: https://dapp.expert', "URI: https://dapp.expert\r\r", EVM_MESSAGE)],
     'chain outside caip-2' => [str_replace('Chain ID: 1', 'Chain ID: eip155:!!!', EVM_MESSAGE)],
 ])->throws(SiwxException::class);
 

@@ -153,3 +153,54 @@ it('tolerates spaces around entries of the allow list', function () {
 
     expect(app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_SIG)->domain)->toBe('dapp.expert');
 });
+
+it('marks an account login', function () {
+    expect(app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_SIG)->contractWallet)->toBeFalse();
+});
+
+it('accepts a chain on the allow list', function () {
+    config()->set('siwx.chains', ['eip155:137', ' eip155:1 ']);
+
+    expect(app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_SIG)->chainId)->toBe('eip155:1');
+});
+
+it('rejects a chain outside the allow list and keeps the nonce', function () {
+    config()->set('siwx.chains', ['eip155:137']);
+
+    $code = null;
+
+    try {
+        app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_SIG);
+    } catch (SiwxException $exception) {
+        $code = $exception->code();
+    }
+
+    expect($code)->toBe('siwx_unsupported_chain')
+        ->and(Cache::has('siwx:nonce:8Kc2fQ1pXm9Zr4Lt'))->toBeTrue();
+});
+
+it('compares the chain as it was signed', function () {
+    config()->set('siwx.chains', ['solana:mainnet']);
+
+    $code = null;
+
+    try {
+        app(SiwxVerifier::class)->verify(SOLANA_MESSAGE, SOLANA_SIG_BASE64);
+    } catch (SiwxException $exception) {
+        $code = $exception->code();
+    }
+
+    expect($code)->toBe('siwx_unsupported_chain');
+});
+
+it('accepts every chain without an allow list', function () {
+    config()->set('siwx.chains', []);
+
+    expect(app(SiwxVerifier::class)->verify(SOLANA_MESSAGE, SOLANA_SIG_BASE64)->namespace)->toBe('solana');
+});
+
+it('keeps working under a config published before the chains option', function () {
+    config()->offsetUnset('siwx.chains');
+
+    expect(app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_SIG)->chainId)->toBe('eip155:1');
+});

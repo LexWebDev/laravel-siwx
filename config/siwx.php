@@ -3,6 +3,7 @@
 return [
     'domains' => array_filter(explode(',', (string) env('SIWX_ALLOWED_DOMAINS', ''))),
     'namespaces' => ['eip155', 'solana'],
+    'chains' => array_filter(explode(',', (string) env('SIWX_ALLOWED_CHAINS', ''))),
     'nonce_ttl' => env('SIWX_NONCE_TTL', 600),
     'clock_skew' => env('SIWX_CLOCK_SKEW', 300),
     'cache_store' => env('SIWX_CACHE_STORE'),

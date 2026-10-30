@@ -6,6 +6,7 @@ use LexWebDev\Siwx\Contracts\ContractSignatureChecker;
 use LexWebDev\Siwx\Contracts\NonceRepository;
 use LexWebDev\Siwx\Exceptions\SiwxException;
 use LexWebDev\Siwx\RpcContractSignatureChecker;
+use LexWebDev\Siwx\SignerKind;
 use LexWebDev\Siwx\SiwxParser;
 use LexWebDev\Siwx\SiwxVerifier;
 use LexWebDev\Siwx\VerifierRegistry;
@@ -22,7 +23,7 @@ it('falls back to the contract checker when recovery does not match', function (
 
     $message = (new SiwxParser)->parse(EVM_MESSAGE);
 
-    expect((new Eip155Verifier($checker))->verify($message, EVM_FOREIGN_SIG))->toBeTrue();
+    expect((new Eip155Verifier($checker))->verify($message, EVM_FOREIGN_SIG))->toBe(SignerKind::Contract);
 });
 
 it('rejects when the contract checker declines', function () {
@@ -36,7 +37,7 @@ it('rejects when the contract checker declines', function () {
 
     $message = (new SiwxParser)->parse(EVM_MESSAGE);
 
-    expect((new Eip155Verifier($checker))->verify($message, EVM_FOREIGN_SIG))->toBeFalse();
+    expect((new Eip155Verifier($checker))->verify($message, EVM_FOREIGN_SIG))->toBe(SignerKind::None);
 });
 
 it('does not call the checker when recovery already matches', function () {
@@ -55,7 +56,7 @@ it('does not call the checker when recovery already matches', function () {
 
     $message = (new SiwxParser)->parse(EVM_MESSAGE);
 
-    expect((new Eip155Verifier($checker))->verify($message, EVM_SIG))->toBeTrue()
+    expect((new Eip155Verifier($checker))->verify($message, EVM_SIG))->toBe(SignerKind::Account)
         ->and($calls)->toBe(0);
 });
 
@@ -182,4 +183,14 @@ it('spends no rpc call on a nonce that was never issued', function () {
 
     expect($code)->toBe('siwx_invalid_nonce')
         ->and($calls)->toBe(0);
+});
+
+it('marks a contract wallet login', function () {
+    Http::fake(['rpc.test/*' => Http::response(['result' => '0x1626ba7e' . str_repeat('0', 56)])]);
+    $this->travelTo('2026-07-30T12:40:00Z');
+    config()->set('siwx.domains', ['dapp.expert']);
+    config()->set('siwx.eip1271', ['enabled' => true, 'rpc_url' => 'https://rpc.test/v1']);
+    Cache::put('siwx:nonce:8Kc2fQ1pXm9Zr4Lt', true, 600);
+
+    expect(app(SiwxVerifier::class)->verify(EVM_MESSAGE, EVM_FOREIGN_SIG)->contractWallet)->toBeTrue();
 });

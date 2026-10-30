@@ -76,6 +76,7 @@ php artisan vendor:publish --tag=siwx-config
 
 ```dotenv
 SIWX_ALLOWED_DOMAINS=app.example,www.app.example
+SIWX_ALLOWED_CHAINS=
 SIWX_NONCE_TTL=600
 SIWX_CLOCK_SKEW=300
 SIWX_CACHE_STORE=
@@ -85,6 +86,9 @@ SIWX_ROUTES_THROTTLE=60,1
 SIWX_EIP1271_ENABLED=false
 SIWX_RPC_URL=
 ```
+
+`SIWX_ALLOWED_CHAINS` обмежує прийнятні мережі CAIP-2, порівнюється як підписано. Порожнє значення
+приймає всі мережі ввімкнених просторів імен.
 
 Вказуйте кожен домен **один раз**, точно так, як гаманець надішле його в рядку `domain`, зокрема з
 портом, якщо застосунок працює на порту, наприклад `localhost:3000` під час розробки.
@@ -143,6 +147,7 @@ $session->chainId;    // always CAIP-2, e.g. 'eip155:137'
 $session->domain;
 $session->issuedAt;   // CarbonImmutable
 $session->message;    // the parsed SiwxMessage
+$session->contractWallet; // true when a smart contract accepted the signature
 ```
 
 `SiwxMessage` містить усі розібрані поля. Ось ті, які варто знати, коли ви перевіряєте намір
@@ -185,6 +190,7 @@ $table->unique(['wallet_namespace', 'wallet_address']);
 | `siwx_invalid_nonce` | nonce ніколи не видавався, уже використаний або сплив |
 | `siwx_invalid_signature` | підпис не належить заявленій адресі |
 | `siwx_unsupported_namespace` | простір імен мережі невідомий або вимкнений у конфігурації |
+| `siwx_unsupported_chain` | мережі немає в `SIWX_ALLOWED_CHAINS` |
 
 Nonce гаситься **після** успішної перевірки підпису, тому неправильним підписом не можна спалити
 чужий nonce.
@@ -232,7 +238,8 @@ const signedChainId = chainId === 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' ? 's
 ```
 
 Цей пакет приймає обидві форми й повертає значення так, як його підписано, тому в `$session->chainId`
-може бути будь-яка з них. Якщо ваша логіка залежить від мережі, порівнюйте з обома.
+може бути будь-яка з них. Якщо ваша логіка залежить від мережі, порівнюйте з обома, а щоб приймати
+обидві, вкажіть обидві в `SIWX_ALLOWED_CHAINS`.
 
 ### One-Click Auth спрацьовує лише в застосунку з одним простором імен
 
@@ -287,9 +294,9 @@ SIWX_RPC_URL=https://your-rpc-endpoint
 Коли мапу задано, мережа поза нею не проходить перевірку, а `rpc_url` ігнорується.
 
 **Адреса контракту належить одній мережі, а не одному власнику.** Ту саму адресу в двох мережах можуть
-контролювати різні сторони. Якщо у мапі більше однієї мережі, ключуйте акаунти контрактних гаманців за
-`($session->chainId, $session->address)`, а не лише за адресою, або залиште тільки одну мережу, якій
-довіряєте. З `SIWX_RPC_URL` сесія показує мережу, заявлену в повідомленні, а не ту, де відбулася
+контролювати різні сторони. `$session->contractWallet` показує, коли це стосується входу: якщо у мапі
+більше однієї мережі, ідентифікуйте такі акаунти за `($session->chainId, $session->address)`, а не лише
+за адресою, або залиште тільки одну мережу, якій довіряєте. З `SIWX_RPC_URL` сесія показує мережу, заявлену в повідомленні, а не ту, де відбулася
 перевірка, тому в цьому режимі вважайте `$session->chainId` неперевіреним.
 
 Для входів з EOA це нічого не коштує: виклик RPC відбувається лише після невдалого відновлення адреси

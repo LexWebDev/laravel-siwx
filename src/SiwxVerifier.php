@@ -14,6 +14,7 @@ final class SiwxVerifier
         private readonly NonceRepository $nonces,
         private readonly array $allowedDomains,
         private readonly int $clockSkew,
+        private readonly array $allowedChains = [],
     ) {}
 
     public function verify(string $rawMessage, string $signature): VerifiedSiwxSession
@@ -21,6 +22,7 @@ final class SiwxVerifier
         $message = $this->parser->parse($rawMessage);
         $verifier = $this->verifiers->for($message->namespace);
 
+        $this->assertChain($message);
         $this->assertDomain($message);
         $this->assertVersion($message);
         $this->assertTimestamps($message);
@@ -29,7 +31,9 @@ final class SiwxVerifier
             throw new SiwxException('siwx_invalid_nonce');
         }
 
-        if (! $verifier->verify($message, $signature)) {
+        $signer = $verifier->verify($message, $signature);
+
+        if ($signer === SignerKind::None) {
             throw new SiwxException('siwx_invalid_signature');
         }
 
@@ -42,7 +46,15 @@ final class SiwxVerifier
             domain: $message->domain,
             issuedAt: $message->issuedAt,
             message: $message,
+            contractWallet: $signer === SignerKind::Contract,
         );
+    }
+
+    private function assertChain(SiwxMessage $message): void
+    {
+        if ($this->allowedChains !== [] && ! in_array($message->chainId, $this->allowedChains, true)) {
+            throw new SiwxException('siwx_unsupported_chain');
+        }
     }
 
     private function assertDomain(SiwxMessage $message): void

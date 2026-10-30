@@ -3,6 +3,7 @@
 namespace LexWebDev\Siwx\Verifiers;
 
 use LexWebDev\Siwx\Contracts\SignatureVerifier;
+use LexWebDev\Siwx\SignerKind;
 use LexWebDev\Siwx\SiwxMessage;
 use StephenHill\Base58;
 use Throwable;
@@ -20,23 +21,25 @@ final class SolanaVerifier implements SignatureVerifier
         return 'solana';
     }
 
-    public function verify(SiwxMessage $message, string $signature): bool
+    public function verify(SiwxMessage $message, string $signature): SignerKind
     {
         $publicKey = $this->decodeBase58($message->address);
         $rawSignature = $this->decodeSignature($signature);
 
         if ($publicKey === null || strlen($publicKey) !== self::KEY_BYTES) {
-            return false;
+            return SignerKind::None;
         }
 
         if ($rawSignature === null || strlen($rawSignature) !== self::SIGNATURE_BYTES) {
-            return false;
+            return SignerKind::None;
         }
 
         try {
-            return sodium_crypto_sign_verify_detached($rawSignature, $message->raw, $publicKey);
+            return sodium_crypto_sign_verify_detached($rawSignature, $message->raw, $publicKey)
+                ? SignerKind::Account
+                : SignerKind::None;
         } catch (Throwable) {
-            return false;
+            return SignerKind::None;
         }
     }
 

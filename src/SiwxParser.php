@@ -24,6 +24,11 @@ final class SiwxParser
     public function parse(string $raw): SiwxMessage
     {
         $normalised = trim(str_replace("\r\n", "\n", $raw));
+
+        if (str_contains($normalised, "\r")) {
+            throw new SiwxException('siwx_invalid_message');
+        }
+
         $lines = explode("\n", $normalised);
 
         if (! preg_match(self::HEADER, array_shift($lines), $header)) {
@@ -177,7 +182,9 @@ final class SiwxParser
 
     private function required(array $fields, string $key): string
     {
-        return $fields[$key] ?? throw new SiwxException('siwx_invalid_message');
+        $value = $fields[$key] ?? '';
+
+        return $value !== '' ? $value : throw new SiwxException('siwx_invalid_message');
     }
 
     private function nonce(array $fields): string
@@ -194,6 +201,12 @@ final class SiwxParser
     private function time(string $value): CarbonImmutable
     {
         if (! preg_match(self::RFC3339, $value)) {
+            throw new SiwxException('siwx_invalid_message');
+        }
+
+        $date = date_parse($value);
+
+        if ($date['warning_count'] > 0 || $date['error_count'] > 0) {
             throw new SiwxException('siwx_invalid_message');
         }
 

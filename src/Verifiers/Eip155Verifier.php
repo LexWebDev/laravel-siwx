@@ -6,6 +6,7 @@ use Elliptic\EC;
 use kornrunner\Keccak;
 use LexWebDev\Siwx\Contracts\ContractSignatureChecker;
 use LexWebDev\Siwx\Contracts\SignatureVerifier;
+use LexWebDev\Siwx\SignerKind;
 use LexWebDev\Siwx\SiwxMessage;
 use Throwable;
 
@@ -18,25 +19,27 @@ final class Eip155Verifier implements SignatureVerifier
         return 'eip155';
     }
 
-    public function verify(SiwxMessage $message, string $signature): bool
+    public function verify(SiwxMessage $message, string $signature): SignerKind
     {
         if (! preg_match('/^0x[a-fA-F0-9]{40}$/', $message->address)) {
-            return false;
+            return SignerKind::None;
         }
 
         $recovered = $this->recover($message->raw, $signature);
 
         if ($recovered !== null
             && $this->normaliseAddress($recovered) === $this->normaliseAddress($message->address)) {
-            return true;
+            return SignerKind::Account;
         }
 
-        return (bool) $this->contracts?->isValid(
+        $accepted = $this->contracts?->isValid(
             $message->address,
             '0x' . $this->hash($message->raw),
             $signature,
             $message->chainId,
         );
+
+        return $accepted ? SignerKind::Contract : SignerKind::None;
     }
 
     public function normaliseAddress(string $address): string

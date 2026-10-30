@@ -13,5 +13,6 @@ final readonly class VerifiedSiwxSession
         public string $domain,
         public CarbonImmutable $issuedAt,
         public SiwxMessage $message,
+        public bool $contractWallet = false,
     ) {}
 }

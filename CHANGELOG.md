@@ -6,6 +6,21 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `SignatureVerifier::verify()` returns a `SignerKind` instead of a `bool`.
+- **Breaking:** `SiwxParser` rejects empty required fields, a carriage return inside the message, and
+  dates that do not exist, such as `2026-02-31` or a sixtieth second. `SiwxVerifier` already refused
+  empty fields, so only direct callers of the parser see that part.
+
+### Added
+
+- `VerifiedSiwxSession::$contractWallet` reports that a smart contract, not a key, accepted the
+  signature.
+- `SIWX_ALLOWED_CHAINS` and `siwx_unsupported_chain` limit the accepted chains before any other
+  check.
+- A parser corpus shared with the Go module, so the two cannot drift apart unnoticed.
+
 ## [0.4.0] - 2026-10-30
 
 The parser now enforces the EIP-4361 grammar, and two public interfaces changed. Implementers of

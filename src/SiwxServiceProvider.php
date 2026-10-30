@@ -45,6 +45,7 @@ class SiwxServiceProvider extends ServiceProvider
             $app->make(NonceRepository::class),
             array_filter(array_map('trim', (array) $app['config']->get('siwx.domains'))),
             (int) $app['config']->get('siwx.clock_skew'),
+            array_values(array_filter(array_map('trim', (array) $app['config']->get('siwx.chains', [])))),
         ));
     }
 

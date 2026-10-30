@@ -2,6 +2,7 @@
 
 use LexWebDev\Siwx\Contracts\SignatureVerifier;
 use LexWebDev\Siwx\Exceptions\SiwxException;
+use LexWebDev\Siwx\SignerKind;
 use LexWebDev\Siwx\SiwxMessage;
 use LexWebDev\Siwx\VerifierRegistry;
 use LexWebDev\Siwx\Verifiers\Eip155Verifier;
@@ -36,9 +37,9 @@ it('accepts a custom verifier', function () {
             return 'bip122';
         }
 
-        public function verify(SiwxMessage $message, string $signature): bool
+        public function verify(SiwxMessage $message, string $signature): SignerKind
         {
-            return true;
+            return SignerKind::Account;
         }
 
         public function normaliseAddress(string $address): string

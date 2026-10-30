@@ -75,6 +75,7 @@ the domain binding is what stops a signature obtained on another site from worki
 
 ```dotenv
 SIWX_ALLOWED_DOMAINS=app.example,www.app.example
+SIWX_ALLOWED_CHAINS=
 SIWX_NONCE_TTL=600
 SIWX_CLOCK_SKEW=300
 SIWX_CACHE_STORE=
@@ -84,6 +85,9 @@ SIWX_ROUTES_THROTTLE=60,1
 SIWX_EIP1271_ENABLED=false
 SIWX_RPC_URL=
 ```
+
+`SIWX_ALLOWED_CHAINS` limits the accepted CAIP-2 chains, compared as signed. Empty accepts every
+chain of the enabled namespaces.
 
 List each domain **once**, exactly as the wallet will send it in the `domain` line — including a
 port if your app runs on one, e.g. `localhost:3000` during development.
@@ -142,6 +146,7 @@ $session->chainId;    // always CAIP-2, e.g. 'eip155:137'
 $session->domain;
 $session->issuedAt;   // CarbonImmutable
 $session->message;    // the parsed SiwxMessage
+$session->contractWallet; // true when a smart contract accepted the signature
 ```
 
 `SiwxMessage` carries every parsed field. The ones worth knowing about when you validate intent:
@@ -183,6 +188,7 @@ into it — you get the code, not a "recovered 0xabc, expected 0xdef" diagnostic
 | `siwx_invalid_nonce` | nonce was never issued, already used, or expired |
 | `siwx_invalid_signature` | signature does not belong to the claimed address |
 | `siwx_unsupported_namespace` | chain namespace is unknown or disabled in config |
+| `siwx_unsupported_chain` | the chain is not in `SIWX_ALLOWED_CHAINS` |
 
 The nonce is consumed **after** the signature check passes, so an invalid signature cannot be
 used to burn somebody else's nonce.
@@ -230,7 +236,8 @@ const signedChainId = chainId === 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' ? 's
 ```
 
 This package accepts both forms and reports the value as it was signed, so `$session->chainId` can
-hold either one. Compare against both if you branch on it.
+hold either one. Compare against both if you branch on it, and list both in `SIWX_ALLOWED_CHAINS` if
+you want to accept both.
 
 ### One-Click Auth only fires in a single-namespace app
 
@@ -286,8 +293,9 @@ the config and map each chain to its own endpoint:
 Once the map is set, a chain outside it fails verification and `rpc_url` is ignored.
 
 **A contract address belongs to one chain, not to one owner.** The same address can be controlled
-by different parties on two networks. If you map more than one chain, key contract-wallet accounts by `($session->chainId, $session->address)`
-rather than by address alone, or map only the single chain you trust. With `SIWX_RPC_URL` the
+by different parties on two networks. `$session->contractWallet` tells you when this applies: if you
+map more than one chain, key those accounts by `($session->chainId, $session->address)` rather than
+by address alone, or map only the single chain you trust. With `SIWX_RPC_URL` the
 session reports the chain the message claims, not the one that was checked, so treat
 `$session->chainId` as unverified in that mode.
 
