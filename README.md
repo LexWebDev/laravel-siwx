@@ -215,6 +215,21 @@ createAppKit({
 On the One-Click Auth path `createMessage` is called without an address, so the nonce cannot be
 derived from the wallet — fetch it from `GET /siwx/nonce` first.
 
+### Phantom refuses the genesis-hash chain id on Solana
+
+AppKit hands `createMessage` the CAIP-2 id `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp`. The Phantom
+extension, as tested on 2026-10-30, will not sign a message carrying it: the wallet fails with
+"The app's signature request cannot be shown due to invalid formatting", AppKit shows "Error
+signing message", and nothing reaches your backend. Write `solana:mainnet` in the `Chain ID` line
+instead:
+
+```js
+const signedChainId = chainId === 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' ? 'solana:mainnet' : chainId
+```
+
+This package accepts both forms and reports the value as it was signed, so `$session->chainId` can
+hold either one. Compare against both if you branch on it.
+
 ### One-Click Auth only fires in a single-namespace app
 
 AppKit attempts One-Click Auth — `wc_sessionAuthenticate`, which returns a CACAO and a message

@@ -205,3 +205,15 @@ it('exposes the request id', function () {
 it('has no request id when the message carries none', function () {
     expect((new SiwxParser)->parse(EVM_MESSAGE)->requestId)->toBeNull();
 });
+
+it('reports the solana chain as it was signed', function (string $signed) {
+    $raw = str_replace('solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', $signed, SOLANA_MESSAGE);
+
+    $message = (new SiwxParser)->parse($raw);
+
+    expect($message->namespace)->toBe('solana')
+        ->and($message->chainId)->toBe($signed);
+})->with([
+    'genesis hash from appkit' => ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+    'alias phantom signs' => ['solana:mainnet'],
+]);
