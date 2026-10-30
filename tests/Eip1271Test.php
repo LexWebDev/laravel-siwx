@@ -7,7 +7,8 @@ use LexWebDev\Siwx\SiwxParser;
 use LexWebDev\Siwx\Verifiers\Eip155Verifier;
 
 it('falls back to the contract checker when recovery does not match', function () {
-    $checker = new class implements ContractSignatureChecker {
+    $checker = new class implements ContractSignatureChecker
+    {
         public function isValid(string $address, string $hash, string $signature): bool
         {
             return true;
@@ -20,7 +21,8 @@ it('falls back to the contract checker when recovery does not match', function (
 });
 
 it('rejects when the contract checker declines', function () {
-    $checker = new class implements ContractSignatureChecker {
+    $checker = new class implements ContractSignatureChecker
+    {
         public function isValid(string $address, string $hash, string $signature): bool
         {
             return false;
@@ -34,7 +36,8 @@ it('rejects when the contract checker declines', function () {
 
 it('does not call the checker when recovery already matches', function () {
     $calls = 0;
-    $checker = new class($calls) implements ContractSignatureChecker {
+    $checker = new class($calls) implements ContractSignatureChecker
+    {
         public function __construct(private int &$calls) {}
 
         public function isValid(string $address, string $hash, string $signature): bool

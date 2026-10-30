@@ -10,6 +10,7 @@ use Throwable;
 final class SolanaVerifier implements SignatureVerifier
 {
     private const KEY_BYTES = 32;
+
     private const SIGNATURE_BYTES = 64;
 
     public function __construct(private readonly ?Base58 $base58 = null) {}

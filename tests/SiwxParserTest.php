@@ -82,7 +82,7 @@ it('rejects a short nonce', function () {
     (new SiwxParser)->parse(str_replace('8Kc2fQ1pXm9Zr4Lt', 'abc', EVM_MESSAGE));
 })->throws(SiwxException::class);
 
-const RECAP_SENTENCE = "I further authorize the stated URI to perform the following actions on my behalf: "
+const RECAP_SENTENCE = 'I further authorize the stated URI to perform the following actions on my behalf: '
     . "(1) 'request': 'personal_sign' for 'eip155'.";
 
 const RECAP_RESOURCE = 'urn:recap:eyJhdHQiOnsiZWlwMTU1Ijp7InJlcXVlc3QvcGVyc29uYWxfc2lnbiI6W3t9XX19fQ';

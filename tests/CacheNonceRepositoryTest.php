@@ -41,7 +41,8 @@ it('issues unique nonces', function () {
 });
 
 it('lets only one of two concurrent requests consume a nonce', function () {
-    $store = new class extends ArrayStore {
+    $store = new class extends ArrayStore
+    {
         public ?Closure $afterFirstRead = null;
 
         public function get($key)

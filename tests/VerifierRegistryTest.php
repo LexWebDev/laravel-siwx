@@ -29,7 +29,8 @@ it('accepts a custom verifier', function () {
 
     $registry = app(VerifierRegistry::class);
 
-    $registry->register(new class implements SignatureVerifier {
+    $registry->register(new class implements SignatureVerifier
+    {
         public function namespace(): string
         {
             return 'bip122';
