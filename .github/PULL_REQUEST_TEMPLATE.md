@@ -18,6 +18,6 @@ Which test fails without this change? Paste the pest output if the change touche
 - [ ] Exception messages carry a machine code and nothing else
 
 <!--
-CI runs PHP 8.2-8.5 against Laravel 12-13. Local green is not CI green — check your branch
+CI runs PHP 8.2-8.5 against Laravel 10-13. Local green is not CI green — check your branch
 before asking for review.
 -->

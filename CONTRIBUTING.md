@@ -22,7 +22,7 @@ vendor/bin/pest --filter="verifies a plain message"
 You need `ext-sodium` and `ext-gmp`. Without gmp, Composer will not install
 `simplito/elliptic-php` at all, so this is not optional.
 
-CI runs the suite against PHP 8.2–8.5 and Laravel 12–13. Passing locally is not the same as
+CI runs the suite against PHP 8.2–8.5 and Laravel 10–13. Passing locally is not the same as
 passing in CI — macOS has masked real failures here before. Check the workflow result on your
 branch before asking for review.
 

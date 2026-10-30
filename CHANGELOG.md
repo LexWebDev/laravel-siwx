@@ -6,6 +6,27 @@ All notable changes to this package are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-30
+
+Security fix. Upgrade if two parallel requests with the same signed message must not both pass.
+
+### Security
+
+- `CacheNonceRepository::consume()` was not atomic. It relied on `Cache::pull()`, which is a read
+  followed by a delete, so parallel requests carrying the same signed message could all pass the
+  nonce check and each receive a session. Consumption now goes through the atomic `Cache::add()`.
+
+### Changed
+
+- `ext-gmp` is declared in `require`. It was already mandatory through `simplito/elliptic-php`;
+  the `suggest` entries presenting `ext-bcmath` as a fallback were wrong and are gone.
+
+### Added
+
+- `.gitattributes` keeps tests and repository tooling out of the distributed archive.
+- CI runs Pint and Larastan, tracks PHP 8.6 without failing the workflow, and accepts Pest 5 and
+  Guzzle 8 in development.
+
 ## [0.3.1] - 2026-10-02
 
 Widens one runtime constraint. No code changed.
