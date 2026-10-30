@@ -129,3 +129,79 @@ it('exposes the signed statement and resources on a plain message', function () 
     expect($message->signedStatement)->toBe('Sign in with Ethereum to the application.')
         ->and($message->resources)->toBe([]);
 });
+
+it('rejects a message that breaks the eip-4361 grammar', function (string $raw) {
+    (new SiwxParser)->parse($raw);
+})->with([
+    'duplicate uri' => [EVM_MESSAGE . "\nURI: https://dapp.expert"],
+    'duplicate nonce' => [EVM_MESSAGE . "\nNonce: zzzz9999zzzz"],
+    'field after resources' => [EVM_RESOURCES_MESSAGE . "\nNonce: zzzz9999zzzz"],
+    'second resources section' => [EVM_RESOURCES_MESSAGE . "\nResources:\n- https://dapp.expert"],
+    'unknown field' => [EVM_MESSAGE . "\nInjected: value"],
+    'resource without a section' => [EVM_MESSAGE . "\n- https://dapp.expert"],
+    'second statement line' => [str_replace(
+        'Sign in with Ethereum to the application.',
+        "Sign in with Ethereum to the application.\nSecond line.",
+        EVM_MESSAGE,
+    )],
+    'relative issued at' => [str_replace('2026-07-30T12:34:56.000Z', 'now', EVM_MESSAGE)],
+    'relative expiration' => [EVM_MESSAGE . "\nExpiration Time: +100 years"],
+    'date without time' => [EVM_MESSAGE . "\nNot Before: 2026-07-30"],
+    'date without offset' => [EVM_MESSAGE . "\nNot Before: 2026-07-30T12:34:56"],
+    'chain outside caip-2' => [str_replace('Chain ID: 1', 'Chain ID: eip155:!!!', EVM_MESSAGE)],
+])->throws(SiwxException::class);
+
+it('accepts every message shape real builders produce', function (string $raw) {
+    expect((new SiwxParser)->parse($raw)->nonce)->toBe('8Kc2fQ1pXm9Zr4Lt');
+})->with([
+    'two blank lines without a statement' => ["dapp.expert wants you to sign in with your Ethereum account:\n"
+        . EVM_SIGNER . "\n\n\n"
+        . "URI: https://dapp.expert\nVersion: 1\nChain ID: 1\n"
+        . "Nonce: 8Kc2fQ1pXm9Zr4Lt\nIssued At: 2026-07-30T12:34:56.000Z"],
+    'empty resources section' => [EVM_MESSAGE . "\nResources:"],
+    'all optional fields in order' => [EVM_MESSAGE
+        . "\nExpiration Time: 2026-07-30T13:34:56.000Z"
+        . "\nNot Before: 2026-07-30T12:00:00.000Z"
+        . "\nRequest ID: req-42"
+        . "\nResources:\n- https://dapp.expert/a\n- urn:recap:eyJhdHQiOnt9fQ"],
+    'statement containing a colon' => [str_replace(
+        'Sign in with Ethereum to the application.',
+        'Note: sign in to the application.',
+        EVM_MESSAGE,
+    )],
+    'timestamp without fraction' => [str_replace('12:34:56.000Z', '12:34:56Z', EVM_MESSAGE)],
+    'timestamp with offset' => [str_replace('12:34:56.000Z', '15:34:56+03:00', EVM_MESSAGE)],
+    'uri with a port and a query' => [str_replace(
+        'URI: https://dapp.expert',
+        'URI: https://dapp.expert:8443/login?next=/home',
+        EVM_MESSAGE,
+    )],
+]);
+
+it('reads the optional scheme from the header', function () {
+    $message = (new SiwxParser)->parse('https://' . EVM_MESSAGE);
+
+    expect($message->scheme)->toBe('https')
+        ->and($message->domain)->toBe('dapp.expert');
+});
+
+it('has no scheme when the header carries none', function () {
+    expect((new SiwxParser)->parse(EVM_MESSAGE)->scheme)->toBeNull();
+});
+
+it('keeps the port when the header carries a scheme', function () {
+    $message = (new SiwxParser)->parse('http://' . PHANTOM_MESSAGE);
+
+    expect($message->scheme)->toBe('http')
+        ->and($message->domain)->toBe('localhost:3000');
+});
+
+it('exposes the request id', function () {
+    $message = (new SiwxParser)->parse(EVM_MESSAGE . "\nRequest ID: req-42");
+
+    expect($message->requestId)->toBe('req-42');
+});
+
+it('has no request id when the message carries none', function () {
+    expect((new SiwxParser)->parse(EVM_MESSAGE)->requestId)->toBeNull();
+});

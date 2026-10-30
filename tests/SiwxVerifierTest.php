@@ -135,3 +135,15 @@ it('rejects a disabled namespace', function () {
     expect(fn () => app(SiwxVerifier::class)->verify(SOLANA_MESSAGE, SOLANA_SIG_BASE64))
         ->toThrow(SiwxException::class);
 });
+
+it('matches the allow list on the domain when the header carries a scheme', function () {
+    $code = null;
+
+    try {
+        app(SiwxVerifier::class)->verify('https://' . EVM_MESSAGE, EVM_SIG);
+    } catch (SiwxException $exception) {
+        $code = $exception->code();
+    }
+
+    expect($code)->toBe('siwx_invalid_signature');
+});

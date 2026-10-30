@@ -8,7 +8,11 @@ use Throwable;
 
 final class SiwxParser
 {
-    private const HEADER = '/^(?P<domain>[^\s]+) wants you to sign in with your (?P<network>.+) account:$/u';
+    private const HEADER = '/^(?:(?P<scheme>[a-zA-Z][a-zA-Z0-9+.\-]*):\/\/)?(?P<domain>[^\s]+) wants you to sign in with your (?P<network>.+) account:$/u';
+
+    private const CAIP2 = '/^[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}$/';
+
+    private const RFC3339 = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/i';
 
     private const RECAP_SENTENCE = 'I further authorize the stated URI to perform the following actions on my behalf:';
 
@@ -54,6 +58,8 @@ final class SiwxParser
             expirationTime: isset($fields['Expiration Time']) ? $this->time($fields['Expiration Time']) : null,
             notBefore: isset($fields['Not Before']) ? $this->time($fields['Not Before']) : null,
             resources: $resources,
+            scheme: $header['scheme'] === '' ? null : $header['scheme'],
+            requestId: $fields['Request ID'] ?? null,
         );
     }
 
@@ -81,15 +87,23 @@ final class SiwxParser
         $fields = [];
 
         foreach ($lines as $line) {
-            if ($line === '' || $line === 'Resources:' || str_starts_with($line, '- ')) {
+            if ($line === '') {
                 continue;
+            }
+
+            if ($line === 'Resources:') {
+                break;
             }
 
             $parts = explode(': ', $line, 2);
 
-            if (count($parts) === 2) {
-                $fields[$parts[0]] = $parts[1];
+            if (count($parts) !== 2
+                || ! in_array($parts[0], self::FIELD_KEYS, true)
+                || isset($fields[$parts[0]])) {
+                throw new SiwxException('siwx_invalid_message');
             }
+
+            $fields[$parts[0]] = $parts[1];
         }
 
         return $fields;
@@ -97,19 +111,20 @@ final class SiwxParser
 
     private function extractResources(array $lines): array
     {
+        $section = array_search('Resources:', $lines, true);
+
+        if ($section === false) {
+            return [];
+        }
+
         $resources = [];
-        $inResources = false;
 
-        foreach ($lines as $line) {
-            if ($line === 'Resources:') {
-                $inResources = true;
-
-                continue;
+        foreach (array_slice($lines, $section + 1) as $line) {
+            if (! str_starts_with($line, '- ')) {
+                throw new SiwxException('siwx_invalid_message');
             }
 
-            if ($inResources && str_starts_with($line, '- ')) {
-                $resources[] = substr($line, 2);
-            }
+            $resources[] = substr($line, 2);
         }
 
         return $resources;
@@ -146,13 +161,11 @@ final class SiwxParser
     private function resolveChain(string $value): array
     {
         if (str_contains($value, ':')) {
-            [$namespace, $reference] = explode(':', $value, 2);
-
-            if ($namespace === '' || $reference === '') {
+            if (! preg_match(self::CAIP2, $value)) {
                 throw new SiwxException('siwx_invalid_message');
             }
 
-            return [$namespace, $namespace . ':' . $reference];
+            return [explode(':', $value, 2)[0], $value];
         }
 
         if (! ctype_digit($value)) {
@@ -180,6 +193,10 @@ final class SiwxParser
 
     private function time(string $value): CarbonImmutable
     {
+        if (! preg_match(self::RFC3339, $value)) {
+            throw new SiwxException('siwx_invalid_message');
+        }
+
         try {
             return CarbonImmutable::parse($value);
         } catch (Throwable) {

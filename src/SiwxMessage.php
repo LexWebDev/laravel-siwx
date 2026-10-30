@@ -22,5 +22,7 @@ final readonly class SiwxMessage
         public ?CarbonImmutable $expirationTime,
         public ?CarbonImmutable $notBefore,
         public array $resources = [],
+        public ?string $scheme = null,
+        public ?string $requestId = null,
     ) {}
 }
