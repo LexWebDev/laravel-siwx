@@ -18,6 +18,7 @@ class SiwxServiceProvider extends ServiceProvider
 
         $this->app->singleton(ContractSignatureChecker::class, fn ($app) => new RpcContractSignatureChecker(
             $app['config']->get('siwx.eip1271.rpc_url'),
+            (array) $app['config']->get('siwx.eip1271.rpc_urls', []),
         ));
 
         $this->app->singleton(VerifierRegistry::class, fn ($app) => new VerifierRegistry(

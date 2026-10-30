@@ -10,17 +10,22 @@ final class RpcContractSignatureChecker implements ContractSignatureChecker
 {
     private const MAGIC_VALUE = '0x1626ba7e';
 
-    public function __construct(private readonly ?string $rpcUrl) {}
+    public function __construct(
+        private readonly ?string $rpcUrl,
+        private readonly array $rpcUrls = [],
+    ) {}
 
-    public function isValid(string $address, string $hash, string $signature): bool
+    public function isValid(string $address, string $hash, string $signature, string $chainId): bool
     {
-        if (! $this->rpcUrl) {
+        $rpcUrl = $this->rpcUrls === [] ? $this->rpcUrl : ($this->rpcUrls[$chainId] ?? null);
+
+        if (! $rpcUrl) {
             return false;
         }
 
         try {
             $result = Http::timeout(5)
-                ->post($this->rpcUrl, [
+                ->post($rpcUrl, [
                     'jsonrpc' => '2.0',
                     'id' => 1,
                     'method' => 'eth_call',

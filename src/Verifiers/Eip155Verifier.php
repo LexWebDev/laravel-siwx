@@ -35,6 +35,7 @@ final class Eip155Verifier implements SignatureVerifier
             $message->address,
             '0x' . $this->hash($message->raw),
             $signature,
+            $message->chainId,
         );
     }
 

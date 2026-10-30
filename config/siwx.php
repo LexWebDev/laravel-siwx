@@ -14,5 +14,6 @@ return [
     'eip1271' => [
         'enabled' => env('SIWX_EIP1271_ENABLED', false),
         'rpc_url' => env('SIWX_RPC_URL'),
+        'rpc_urls' => [],
     ],
 ];
